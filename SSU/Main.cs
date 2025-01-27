@@ -30,35 +30,35 @@ namespace SSU
 
             if (m.Msg == 0x0312) //0x0312 = 786
             {
-                try
+                //Check if limit reached
+                if ((SC.index).ToString() != SC_cap.Text)
                 {
-                    //Check if limit reached
-                    if ((SC.index - 1).ToString() != SC_cap.Text)
+                    //Notify User (if enable)
+                    if (SC.sfx)
                     {
-                        //Notify User (if enable)
-                        if (SC.sfx)
+                        if (File.Exists("./sfx.wav"))
                         {
-                            if (File.Exists("./sfx.wav"))
-                            {
-                                SoundPlayer soundPlayer = new SoundPlayer();
-                                soundPlayer.SoundLocation = "./sfx.wav";
-                                soundPlayer.Play();
-                                soundPlayer.Dispose();
-                            }
-                            else
-                                MessageBox.Show("sfx.wav not found", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        }
-                        if (!process_mode.Checked)
-                        {
-                            Rectangle bounds = Screen.GetBounds(Point.Empty);
-                            using (Bitmap bm = new Bitmap(bounds.Width, bounds.Height))
-                            {
-                                using (Graphics g = Graphics.FromImage(bm))
-                                    g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
-                                bm.Save(SC.GetSCPath(), ImageFormat.Png);
-                            }
+                            SoundPlayer soundPlayer = new SoundPlayer();
+                            soundPlayer.SoundLocation = "./sfx.wav";
+                            soundPlayer.Play();
+                            soundPlayer.Dispose();
                         }
                         else
+                            MessageBox.Show("sfx.wav not found", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                    if (!process_mode.Checked)
+                    {
+                        Rectangle bounds = Screen.GetBounds(Point.Empty);
+                        using (Bitmap bm = new Bitmap(bounds.Width, bounds.Height))
+                        {
+                            using (Graphics g = Graphics.FromImage(bm))
+                                g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                            bm.Save(SC.GetSCPath(), ImageFormat.Png);
+                        }
+                    }
+                    else
+                    {
+                        try
                         {
                             Rectangle rect = new Rectangle();
                             GetWindowRect(Global.handle, ref rect);
@@ -69,13 +69,13 @@ namespace SSU
                                 bm.Save(SC.GetSCPath(), ImageFormat.Png);
                             }
                         }
-                        SC.index++;
-                        Update_preview();
+                        catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                     }
-                    else
-                        MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    SC.index++;
+                    Update_preview();
                 }
-                catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                else
+                    MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         //Actual Code Start's here
@@ -93,9 +93,9 @@ namespace SSU
             SC.SetIndex();
             Update_preview();
             Key_box.Text = SC.GetKeyString();
-            string s = "";
+            string s = "1";
             for (int i = 0; i < SC.format.Length; i++)
-                s += "9";
+                s += "0";
             SC_cap.Text = s;
             Browse_box.Text = SC.res_path;
             Play_Sound.Checked = SC.sfx;
@@ -106,10 +106,10 @@ namespace SSU
         {
             SC_Sample.Text = Path.GetFileName(SC.GetSCPath());
             SC_name.Text = SC.res_name;
-            if (SC.index - 1 >= 0)
-                Index.Text = $"Image Saved\n{SC.index - 1}";
-            else
-                Index.Text = $"Image Saved\n{SC.index}";
+            //if (SC.index - 1 >= 0)
+            //    Index.Text = $"Image Saved\n{SC.index - 1}";
+            //else
+            Index.Text = $"Image Saved\n{SC.index}";
         }
         private void Form_close(object sender, FormClosingEventArgs e)
         {

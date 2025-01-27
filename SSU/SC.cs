@@ -31,7 +31,7 @@ namespace SSU
         public static void SetFormat(int count)
         {
             format = "";
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < count - 1; i++)
                 format += "0";
         }
         public static void SetIndex()
