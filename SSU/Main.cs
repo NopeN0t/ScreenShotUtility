@@ -69,7 +69,7 @@ namespace SSU
                                 bm.Save(SC.GetSCPath(), ImageFormat.Png);
                             }
                         }
-                        catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                        catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return;}
                     }
                     SC.index++;
                     Update_preview();
