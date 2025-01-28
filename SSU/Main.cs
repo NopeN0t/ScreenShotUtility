@@ -15,7 +15,9 @@ namespace SSU
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
         [DllImport("user32.dll")]
-        private static extern IntPtr GetWindowRect(IntPtr hWnd, ref Rectangle rect);
+        private static extern IntPtr GetClientRect(IntPtr hWnd, out Rectangle lpRect);
+        [DllImport("user32.dll")]
+        private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
 
         void Register_key(bool reload = false)
         {
@@ -31,51 +33,45 @@ namespace SSU
             if (m.Msg == 0x0312) //0x0312 = 786
             {
                 //Check if limit reached
-                if ((SC.index).ToString() != SC_cap.Text)
+                if ((SC.index).ToString() == SC_cap.Text)
+                    MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!process_mode.Checked)
                 {
-                    //Notify User (if enable)
-                    if (SC.sfx)
-                    {
-                        if (File.Exists("./sfx.wav"))
-                        {
-                            SoundPlayer soundPlayer = new SoundPlayer();
-                            soundPlayer.SoundLocation = "./sfx.wav";
-                            soundPlayer.Play();
-                            soundPlayer.Dispose();
-                        }
-                        else
-                            MessageBox.Show("sfx.wav not found", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                    if (!process_mode.Checked)
-                    {
-                        Rectangle bounds = Screen.GetBounds(Point.Empty);
-                        using (Bitmap bm = new Bitmap(bounds.Width, bounds.Height))
-                        {
-                            using (Graphics g = Graphics.FromImage(bm))
-                                g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
-                            bm.Save(SC.GetSCPath(), ImageFormat.Png);
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            Rectangle rect = new Rectangle();
-                            GetWindowRect(Global.handle, ref rect);
-                            using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
-                            {
-                                using (Graphics g = Graphics.FromImage(bm))
-                                    g.CopyFromScreen(rect.Location, Point.Empty, bm.Size);
-                                bm.Save(SC.GetSCPath(), ImageFormat.Png);
-                            }
-                        }
-                        catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return;}
-                    }
-                    SC.index++;
-                    Update_preview();
+                    Rectangle bounds = Screen.GetBounds(Point.Empty);
+                    using (Bitmap bm = new Bitmap(bounds.Width, bounds.Height))
+                        SC.TakeScreenShot(bm, Point.Empty, Point.Empty, bounds.Size);
                 }
                 else
-                    MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                {
+                    try
+                    {
+                        Rectangle rect;
+                        GetClientRect(Global.handle, out rect);
+                        Point topleft = new Point(rect.Left, rect.Top);
+                        ClientToScreen(Global.handle, ref topleft);
+                        //If you want to include titlebar
+                        //topleft.Y -= 35;
+                        //rect.Height += 35;
+                        using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
+                            SC.TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
+                    }
+                    catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+                }
+                //Notify User (if enable)
+                if (SC.sfx)
+                {
+                    if (File.Exists("./sfx.wav"))
+                    {
+                        SoundPlayer soundPlayer = new SoundPlayer();
+                        soundPlayer.SoundLocation = "./sfx.wav";
+                        soundPlayer.Play();
+                        soundPlayer.Dispose();
+                    }
+                    else
+                        MessageBox.Show("sfx.wav not found", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                SC.index++;
+                Update_preview();
             }
         }
         //Actual Code Start's here
@@ -106,9 +102,6 @@ namespace SSU
         {
             SC_Sample.Text = Path.GetFileName(SC.GetSCPath());
             SC_name.Text = SC.res_name;
-            //if (SC.index - 1 >= 0)
-            //    Index.Text = $"Image Saved\n{SC.index - 1}";
-            //else
             Index.Text = $"Image Saved\n{SC.index}";
         }
         private void Form_close(object sender, FormClosingEventArgs e)

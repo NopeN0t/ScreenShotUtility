@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
 
@@ -27,6 +29,13 @@ namespace SSU
             Ctrl = 2,
             Shift = 4,
             WinKey = 8
+        }
+        public static void TakeScreenShot(Bitmap bm, Point start, Point end, Size size, bool save = true)
+        {
+            using (Graphics g = Graphics.FromImage(bm))
+                g.CopyFromScreen(start, end, size);
+            if (save)
+                bm.Save(SC.GetSCPath(), ImageFormat.Png);
         }
         public static void SetFormat(int count)
         {
