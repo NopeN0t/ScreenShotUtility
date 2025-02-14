@@ -64,6 +64,7 @@ namespace SSU
             while (File.Exists(GetSCPath()))
                 index++;
         }
+        //Convert KeyModifier to keyboard keys
         public string GetKeyString()
         {
             int n = fsModifier;
@@ -79,6 +80,7 @@ namespace SSU
             }
             return s += vk_str;
         }
+        //Get the final path of the screenshot
         public string GetSCPath()
         {
             string s = "";
@@ -91,6 +93,7 @@ namespace SSU
             sw.WriteLine("[infos]");
             sw.WriteLine($"fsModifier = {fsModifier}");
             sw.WriteLine($"vk = {vk}");
+            sw.WriteLine($"vk_str = {vk_str}");
             sw.WriteLine($"res_path = {res_path}");
             sw.WriteLine($"res_prefix = {res_prefix}");
             sw.WriteLine($"sfx = {sfx}");
@@ -113,6 +116,7 @@ namespace SSU
             sr.Close();
             fsModifier = Convert.ToInt32(dict["fsModifier"]);
             vk = Convert.ToInt32(dict["vk"]);
+            vk_str = dict["vk_str"];
             res_path = dict["res_path"];
             sfx = Convert.ToBoolean(dict["sfx"]);
             format = dict["format"];
