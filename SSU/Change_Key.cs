@@ -52,7 +52,6 @@ namespace SSU
         private void Done_Click(object sender, EventArgs e)
         {
             SC_Lib.vk = (int)Enum.Parse(typeof(Keys), key_box.Text);
-            MessageBox.Show(SC_Lib.vk.ToString());
             SC_Lib.vk_str = key_box.Text.ToString();
             int n = 0;
             if (win_key.Checked) n += 8;

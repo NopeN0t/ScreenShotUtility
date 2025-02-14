@@ -122,7 +122,6 @@ namespace SSU
             ck.SC_Lib = SC_Lib;
             if (ck.ShowDialog() == DialogResult.OK)
             {
-                MessageBox.Show("Key Changed", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Key_box.Text = SC_Lib.GetKeyString();
                 SC_Lib.save();
                 Register_key(true);
