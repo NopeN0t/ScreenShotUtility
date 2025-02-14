@@ -23,7 +23,7 @@ namespace SSU
         {
             if (reload)
                 UnregisterHotKey(this.Handle, 0);
-            RegisterHotKey(this.Handle, 0, SC.fsModifier, SC.vk);
+            RegisterHotKey(this.Handle, 0, SC_Lib.fsModifier, SC_Lib.vk);
         }
         //Shortcut Detection
         protected override void WndProc(ref Message m)
@@ -33,13 +33,13 @@ namespace SSU
             if (m.Msg == 0x0312) //0x0312 = 786
             {
                 //Check if limit reached
-                if ((SC.index).ToString() == SC_cap.Text)
+                if ((SC_Lib.index).ToString() == SC_cap.Text)
                     MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 if (!process_mode.Checked)
                 {
                     Rectangle bounds = Screen.GetBounds(Point.Empty);
                     using (Bitmap bm = new Bitmap(bounds.Width, bounds.Height))
-                        SC.TakeScreenShot(bm, Point.Empty, Point.Empty, bounds.Size);
+                        SC_Lib.TakeScreenShot(bm, Point.Empty, Point.Empty, bounds.Size);
                 }
                 else
                 {
@@ -49,16 +49,16 @@ namespace SSU
                         GetClientRect(Global.handle, out rect);
                         Point topleft = new Point(rect.Left, rect.Top);
                         ClientToScreen(Global.handle, ref topleft);
-                        //If you want to include titlebar
+                        //If you want to include titlebar (approximate)
                         //topleft.Y -= 35;
                         //rect.Height += 35;
                         using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
-                            SC.TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
+                            SC_Lib.TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
                     }
                     catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
                 }
                 //Notify User (if enable)
-                if (SC.sfx)
+                if (SC_Lib.sfx)
                 {
                     if (File.Exists("./sfx.wav"))
                     {
@@ -70,89 +70,100 @@ namespace SSU
                     else
                         MessageBox.Show("sfx.wav not found", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-                SC.index++;
+                SC_Lib.index++;
                 Update_preview();
             }
         }
         //Actual Code Start's here
+        ScreenShot_Core SC_Lib = new ScreenShot_Core();
         public Main()
         {
             InitializeComponent();
-            try
-            {
-                if (File.Exists(SC.f_path))
-                    SC.load();
-                else
-                    SC.save();
-            }
-            catch { SC.save(); }
-            SC.SetIndex();
+            //Initialize Hotkey
+            Register_key();
+
+            //Initialize UI
             Update_preview();
-            Key_box.Text = SC.GetKeyString();
+            Key_box.Text = SC_Lib.GetKeyString();
             string s = "1";
-            for (int i = 0; i < SC.format.Length; i++)
+            for (int i = 0; i < SC_Lib.format.Length; i++)
                 s += "0";
             SC_cap.Text = s;
-            Browse_box.Text = SC.res_path;
-            Play_Sound.Checked = SC.sfx;
+            Browse_box.Text = SC_Lib.res_path;
+            Play_Sound.Checked = SC_Lib.sfx;
             Global.setup_pr();
-            Register_key();
+
+            //Minimize to tray based on lunch option
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                this.Hide();
+                notifyIcon.Visible = true;
+            }
         }
+
+        //Update UI
         void Update_preview()
         {
-            SC_Sample.Text = Path.GetFileName(SC.GetSCPath());
-            SC_name.Text = SC.res_name;
-            Index.Text = $"Image Saved\n{SC.index}";
+            SC_Sample.Text = Path.GetFileName(SC_Lib.GetSCPath());
+            SC_name.Text = SC_Lib.res_name;
+            Index.Text = $"Image Saved\n{SC_Lib.index}";
         }
+        
+        //Unload Hotkey and Save settings
         private void Form_close(object sender, FormClosingEventArgs e)
         {
             UnregisterHotKey(this.Handle, 0);
-            SC.save();
+            SC_Lib.save();
         }
 
         private void Key_set_Click(object sender, EventArgs e)
         {
             Change_Key ck = new Change_Key();
+            ck.SC_Lib = SC_Lib;
             if (ck.ShowDialog() == DialogResult.OK)
             {
-                Key_box.Text = SC.GetKeyString();
-                SC.save();
+                MessageBox.Show("Key Changed", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Key_box.Text = SC_Lib.GetKeyString();
+                SC_Lib.save();
                 Register_key(true);
             }
         }
 
+        //Browse save path
         private void Browse_click(object sender, EventArgs e)
         {
             FolderBrowserDialog fbd = new FolderBrowserDialog();
             fbd.ShowDialog();
             Browse_box.Text = fbd.SelectedPath;
-            SC.SetIndex();
+            SC_Lib.SetIndex();
             Update_preview();
         }
 
+        //Update save path
         private void Browse_box_TextChanged(object sender, EventArgs e)
         {
-            SC.res_path = Browse_box.Text;
-            SC.SetIndex();
+            SC_Lib.res_path = Browse_box.Text;
+            SC_Lib.SetIndex();
             Update_preview();
         }
 
         private void Play_Sound_CheckedChanged(object sender, EventArgs e)
         {
-            SC.sfx = Play_Sound.Checked;
+            SC_Lib.sfx = Play_Sound.Checked;
         }
 
+        //Update save name
         private void SC_name_TextChanged(object sender, EventArgs e)
         {
-            SC.res_name = SC_name.Text;
-            SC.SetIndex();
+            SC_Lib.res_name = SC_name.Text;
+            SC_Lib.SetIndex();
             Update_preview();
         }
 
         private void SC_cap_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SC.SetFormat(SC_cap.SelectedItem.ToString().Length);
-            SC.SetIndex();
+            SC_Lib.SetFormat(SC_cap.SelectedItem.ToString().Length);
+            SC_Lib.SetIndex();
             Update_preview();
         }
 
@@ -166,19 +177,21 @@ namespace SSU
         private void process_select_Click(object sender, EventArgs e)
         {
             Select_Process sp = new Select_Process();
+            sp.SC_Lib = SC_Lib;
             if (sp.ShowDialog() == DialogResult.OK)
-                Process_box.Text = SC.Select_process.ProcessName;
+                Process_box.Text = SC_Lib.Select_process.ProcessName;
         }
 
         private void SC_prefix_TextChanged(object sender, EventArgs e)
         {
-            SC.res_prefix = SC_prefix.Text;
-            SC.SetIndex();
+            SC_Lib.res_prefix = SC_prefix.Text;
+            SC_Lib.SetIndex();
             Update_preview();
         }
 
         private void From_resize(object sender, EventArgs e)
         {
+            //Minimize to tray
             if (this.WindowState == FormWindowState.Minimized)
             {
                 this.Hide();
@@ -186,6 +199,7 @@ namespace SSU
             }
         }
 
+        //Show from tray
         private void notifyicon_doubleclick(object sender, MouseEventArgs e)
         {
             this.Show();

@@ -4,24 +4,39 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Security.Policy;
 using System.Windows.Forms;
 
 namespace SSU
 {
-    internal class SC
+    public class ScreenShot_Core
     {
         //Default settings win + shift +  a
-        public static int fsModifier = 12;
-        public static int vk = Keys.A.GetHashCode();
-        public static string vk_str = "A";
-        public static string f_path = "./shortcut.ini";
-        public static string res_name = "sc";
-        public static string res_prefix = "";
-        public static string res_path = "./";
-        public static bool sfx = true;
-        public static int index = 0;
-        public static string format = "0";
-        public static Process Select_process = null;
+        public int fsModifier = 12;
+        public int vk = Keys.A.GetHashCode();
+        public string vk_str = "A";
+        public string f_path = "./shortcut.ini";
+        public string res_name = "";
+        public string res_prefix = "";
+        public string res_path = "./";
+        public bool sfx = true;
+        public int index = 0;
+        public string format = "000";
+        public Process Select_process = null;
+
+        //Constructor
+        public ScreenShot_Core()
+        {
+            try
+            {
+                if (File.Exists(f_path))
+                    load();
+                else
+                    save();
+            }
+            catch { save(); }
+            SetIndex();
+        }
         public enum KeyModifier
         {
             None = 0,
@@ -30,59 +45,47 @@ namespace SSU
             Shift = 4,
             WinKey = 8
         }
-        public static void TakeScreenShot(Bitmap bm, Point start, Point end, Size size, bool save = true)
+        public void TakeScreenShot(Bitmap bm, Point start, Point end, Size size, bool save = true)
         {
             using (Graphics g = Graphics.FromImage(bm))
                 g.CopyFromScreen(start, end, size);
             if (save)
-                bm.Save(SC.GetSCPath(), ImageFormat.Png);
+                bm.Save(GetSCPath(), ImageFormat.Png);
         }
-        public static void SetFormat(int count)
+        public void SetFormat(int count)
         {
             format = "";
             for (int i = 0; i < count - 1; i++)
                 format += "0";
         }
-        public static void SetIndex()
+        public void SetIndex()
         {
             index = 0;
             while (File.Exists(GetSCPath()))
                 index++;
         }
-        public static string GetKeyString()
+        public string GetKeyString()
         {
             int n = fsModifier;
+            var modifiers = new[] { ("Win", 8), ("Shift", 4), ("Ctrl", 2), ("Alt", 1) };
             string s = "";
-            if (n - 8 >= 0)
+            foreach (var modifier in modifiers)
             {
-                s += "Win+";
-                n -= 8;
+                if (n >= modifier.Item2)
+                {
+                    s += modifier.Item1 + "+";
+                    n -= modifier.Item2;
+                }
             }
-            if (n - 4 >= 0)
-            {
-                s += "Shift+";
-                n -= 4;
-            }
-            if (n - 2 >= 0)
-            {
-                s += "Ctrl+";
-                n -= 2;
-            }
-            if (n - 1 >= 0)
-            {
-                s += "Alt+";
-                n -= 1;
-            }
-            s += vk_str;
-            return s;
+            return s += vk_str;
         }
-        public static string GetSCPath()
+        public string GetSCPath()
         {
             string s = "";
             s += $"{res_path}/{res_prefix}{index.ToString(format)}{res_name}.png";
             return s;
         }
-        public static void save()
+        public void save()
         {
             StreamWriter sw = new StreamWriter(f_path, false);
             sw.WriteLine("[infos]");
@@ -95,7 +98,7 @@ namespace SSU
             sw.WriteLine($"file_name = {res_name}");
             sw.Close();
         }
-        public static void load()
+        public void load()
         {
             var dict = new Dictionary<string, string>();
             StreamReader sr = new StreamReader(f_path);

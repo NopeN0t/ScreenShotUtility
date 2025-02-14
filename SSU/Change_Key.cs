@@ -4,7 +4,8 @@ using System.Windows.Forms;
 namespace SSU
 {
     public partial class Change_Key : Form
-    {
+    {   //SC_Core passed from main form
+        public ScreenShot_Core SC_Lib;
         private bool setmode = false;
         public Change_Key()
         {
@@ -18,7 +19,7 @@ namespace SSU
 
         private void Change_Key_Load(object sender, EventArgs e)
         {
-            string[] s = SC.GetKeyString().Split('+');
+            string[] s = SC_Lib.GetKeyString().Split('+');
             foreach (string s2 in s)
             {
                 if (s2 == "Win") win_key.Checked = true;
@@ -50,14 +51,15 @@ namespace SSU
 
         private void Done_Click(object sender, EventArgs e)
         {
-            SC.vk = (int)Enum.Parse(typeof(Keys), key_box.Text);
-            SC.vk_str = key_box.Text.ToString();
+            SC_Lib.vk = (int)Enum.Parse(typeof(Keys), key_box.Text);
+            MessageBox.Show(SC_Lib.vk.ToString());
+            SC_Lib.vk_str = key_box.Text.ToString();
             int n = 0;
             if (win_key.Checked) n += 8;
             if (shift_key.Checked) n += 4;
             if (ctrl_key.Checked) n += 2;
             if (alt_key.Checked) n += 1;
-            SC.fsModifier = n;
+            SC_Lib.fsModifier = n;
             DialogResult = DialogResult.OK;
         }
     }

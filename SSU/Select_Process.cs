@@ -4,7 +4,8 @@ using System.Windows.Forms;
 namespace SSU
 {
     public partial class Select_Process : Form
-    {
+    {   //SC_Core passed from main form
+        public ScreenShot_Core SC_Lib;
         public Select_Process()
         {
             InitializeComponent();
@@ -31,8 +32,8 @@ namespace SSU
         {
             try
             {
-                SC.Select_process = Global.processes[index];
-                Global.handle = SC.Select_process.MainWindowHandle;
+                SC_Lib.Select_process = Global.processes[index];
+                Global.handle = SC_Lib.Select_process.MainWindowHandle;
                 if (Global.handle == IntPtr.Zero)
                     MessageBox.Show("Window Not Found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.OK;
