@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace SSU
@@ -10,12 +14,37 @@ namespace SSU
         {
             InitializeComponent();
         }
-
+        public DataTable pr = new DataTable();
+        public Process[] processes;
+        public void setup_pr()
+        {
+            pr.Columns.Clear();
+            pr.Columns.Add("Process Name");
+            pr.Columns.Add("Process ID");
+        }
+        public void load_pr()
+        {
+            pr.Rows.Clear();
+            processes = Process.GetProcesses().Where(p => !string.IsNullOrEmpty(p.MainWindowTitle)).ToArray();
+            for (int i = 0; i < processes.Length; i++)
+                pr.Rows.Add(processes[i].ProcessName, processes[i].MainWindowTitle);
+        }
+        public void RefreshGrid(DataGridView input, int header_height = 10, int font_size = 10, string font = "Thaoma", int row_height = 20)
+        {
+            input.DefaultCellStyle.Font = new Font(font, font_size);
+            input.ColumnHeadersHeight = header_height;
+            input.ColumnHeadersDefaultCellStyle.Font = new Font(font, font_size);
+            for (int i = 0; i < input.Columns.Count; i++)
+                input.Columns[i].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            for (int i = 0; i < input.Rows.Count; i++)
+                input.Rows[i].Height = row_height;
+        }
         private void Select_Process_Load(object sender, EventArgs e)
         {
-            Global.load_pr();
-            dataGridView1.DataSource = Global.pr;
-            Global.RefreshGrid(dataGridView1);
+            setup_pr();
+            load_pr();
+            dataGridView1.DataSource = pr;
+            RefreshGrid(dataGridView1);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -32,7 +61,7 @@ namespace SSU
         {
             try
             {
-                SC_Lib.Select_process = Global.processes[index];
+                SC_Lib.Select_process = processes[index];
                 Global.handle = SC_Lib.Select_process.MainWindowHandle;
                 if (Global.handle == IntPtr.Zero)
                     MessageBox.Show("Window Not Found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

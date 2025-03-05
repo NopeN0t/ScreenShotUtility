@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Media;
 using System.Runtime.InteropServices;
@@ -91,7 +90,6 @@ namespace SSU
             SC_cap.Text = s;
             Browse_box.Text = SC_Lib.res_path;
             Play_Sound.Checked = SC_Lib.sfx;
-            Global.setup_pr();
 
             //Minimize to tray based on lunch option
             if (this.WindowState == FormWindowState.Minimized)
@@ -108,7 +106,7 @@ namespace SSU
             SC_name.Text = SC_Lib.res_name;
             Index.Text = $"Image Saved\n{SC_Lib.index}";
         }
-        
+
         //Unload Hotkey and Save settings
         private void Form_close(object sender, FormClosingEventArgs e)
         {
