@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Security.Policy;
 using System.Windows.Forms;
 
 namespace SSU
@@ -34,7 +33,11 @@ namespace SSU
                 else
                     save();
             }
-            catch { save(); }
+            catch
+            {
+                MessageBox.Show("Error Loading Settings", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                save();
+            }
             SetIndex();
         }
         public enum KeyModifier
