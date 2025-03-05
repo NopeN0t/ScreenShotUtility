@@ -33,7 +33,7 @@ namespace SSU
             {
                 //Check if limit reached
                 if ((SC_Lib.index).ToString() == SC_cap.Text)
-                    MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                { MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
                 if (!process_mode.Checked)
                 {
                     Rectangle bounds = Screen.GetBounds(Point.Empty);
