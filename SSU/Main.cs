@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Media;
@@ -75,6 +76,7 @@ namespace SSU
         }
         //Actual Code Start's here
         ScreenShot_Core SC_Lib = new ScreenShot_Core();
+        bool isInitilized = false;
         public Main()
         {
             InitializeComponent();
@@ -90,13 +92,22 @@ namespace SSU
             SC_cap.Text = s;
             Browse_box.Text = SC_Lib.res_path;
             Play_Sound.Checked = SC_Lib.sfx;
-
+            //Auto start
+            RegistryKey rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", false);
+            if (rk != null)
+                Startup.Checked =  rk.GetValue(Global.program_name) != null;
+            else
+                Startup.Checked = false;
+            Start_minimized.Checked = Properties.Settings.Default.Start_Minimized;
+            if (Properties.Settings.Default.Start_Minimized)
+                this.WindowState = FormWindowState.Minimized;
             //Minimize to tray based on lunch option
             if (this.WindowState == FormWindowState.Minimized)
             {
                 this.Hide();
                 notifyIcon.Visible = true;
             }
+            isInitilized = true;
         }
 
         //Update UI
@@ -202,6 +213,27 @@ namespace SSU
             this.Show();
             this.WindowState = FormWindowState.Normal;
             notifyIcon.Visible = false;
+        }
+
+        private void Startup_CheckedChanged(object sender, EventArgs e)
+        {
+            if (isInitilized)
+            {
+                RegistryKey rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+                if (Startup.Checked)
+                    rk.SetValue(Global.program_name, Application.ExecutablePath);
+                else
+                    rk.DeleteValue(Global.program_name, false);
+            }
+        }
+
+        private void Start_minimized_CheckedChanged(object sender, EventArgs e)
+        {
+            if (isInitilized)
+            {
+                Properties.Settings.Default["Start_Minimized"] = Start_minimized.Checked;
+                Properties.Settings.Default.Save();
+            }
         }
     }
 }
