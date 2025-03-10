@@ -60,10 +60,10 @@ namespace SSU
                 //Notify User (if enable)
                 if (SC_Lib.sfx)
                 {
-                    if (File.Exists("./sfx.wav"))
+                    if (File.Exists(Path.Combine(Global.program_directory, "sfx.wav")))
                     {
                         SoundPlayer soundPlayer = new SoundPlayer();
-                        soundPlayer.SoundLocation = "./sfx.wav";
+                        soundPlayer.SoundLocation = Path.Combine(Global.program_directory, "./sfx.wav");
                         soundPlayer.Play();
                         soundPlayer.Dispose();
                     }

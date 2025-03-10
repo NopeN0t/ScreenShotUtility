@@ -14,10 +14,10 @@ namespace SSU
         public int fsModifier = 12;
         public int vk = Keys.A.GetHashCode();
         public string vk_str = "A";
-        public string f_path = "./shortcut.ini";
+        public string f_path = Path.Combine(Global.program_directory, "shortcut.ini");
         public string res_name = "";
         public string res_prefix = "";
-        public string res_path = "./";
+        public string res_path = @"./";
         public bool sfx = true;
         public int index = 0;
         public string format = "000";
