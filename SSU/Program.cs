@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace SSU
@@ -11,9 +12,19 @@ namespace SSU
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Main());
+            // Check if another instance is already running
+            bool isNewInstance;
+            using (Mutex mutex = new Mutex(true, "ScreenShotUtility", out isNewInstance))
+            {
+                if (!isNewInstance)
+                {
+                    MessageBox.Show("Another instance of the program is already running.", "Instance Running", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new Main());
+            }
         }
     }
 }
