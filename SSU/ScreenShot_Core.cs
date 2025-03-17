@@ -11,17 +11,17 @@ namespace SSU
     public class ScreenShot_Core
     {
         //Default settings win + shift +  a
-        public int fsModifier = 12;
-        public int vk = Keys.A.GetHashCode();
-        public string vk_str = "A";
-        public string f_path = Path.Combine(Global.program_directory, "shortcut.ini");
-        public string res_name = "";
-        public string res_prefix = "";
-        public string res_path = @"./";
-        public bool sfx = true;
-        public int index = 0;
-        public string format = "000";
-        public Process Select_process = null;
+        public int fsModifier { get; set; } = 12;
+        public int vk { get; set; } = Keys.A.GetHashCode();
+        public string vk_str { get; set; } = "A";
+        public string f_path { get; set; } = Path.Combine(Global.program_directory, "shortcut.ini");
+        public string res_name { get; set; } = "";
+        public string res_prefix { get; set; } = "";
+        public string res_path { get; set; } = @"./";
+        public bool sfx { get; set; } = true;
+        public int index { get; set; } = 0;
+        public string format { get; set; } = "000";
+        public Process Select_process { get; set; } = null;
 
         //Constructor
         public ScreenShot_Core()
