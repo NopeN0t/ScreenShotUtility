@@ -85,6 +85,7 @@ namespace SSU
 
             //Initialize UI
             Update_preview();
+            notifyIcon.ContextMenuStrip = Icon_Menu;
             Key_box.Text = SC_Lib.GetKeyString();
             string s = "1";
             for (int i = 0; i < SC_Lib.format.Length; i++)
@@ -234,6 +235,18 @@ namespace SSU
                 Properties.Settings.Default["Start_Minimized"] = Start_minimized.Checked;
                 Properties.Settings.Default.Save();
             }
+        }
+
+        private void Icon_Show_Click(object sender, EventArgs e)
+        {
+            this.Show();
+            this.WindowState = FormWindowState.Normal;
+            notifyIcon.Visible = false;
+        }
+
+        private void Icon_Exit_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
     }
 }

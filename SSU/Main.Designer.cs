@@ -38,6 +38,7 @@
             this.Browse = new System.Windows.Forms.Button();
             this.Play_Sound = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.Start_minimized = new System.Windows.Forms.CheckBox();
             this.Startup = new System.Windows.Forms.CheckBox();
             this.process_select = new System.Windows.Forms.Button();
             this.Process_box = new System.Windows.Forms.TextBox();
@@ -53,9 +54,12 @@
             this.SC_name = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.Start_minimized = new System.Windows.Forms.CheckBox();
+            this.Icon_Menu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.Icon_Show = new System.Windows.Forms.ToolStripMenuItem();
+            this.Icon_Exit = new System.Windows.Forms.ToolStripMenuItem();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            this.Icon_Menu.SuspendLayout();
             this.SuspendLayout();
             // 
             // Key_box
@@ -142,6 +146,17 @@
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Settings";
+            // 
+            // Start_minimized
+            // 
+            this.Start_minimized.AutoSize = true;
+            this.Start_minimized.Location = new System.Drawing.Point(178, 96);
+            this.Start_minimized.Name = "Start_minimized";
+            this.Start_minimized.Size = new System.Drawing.Size(156, 28);
+            this.Start_minimized.TabIndex = 11;
+            this.Start_minimized.Text = "Start minimized";
+            this.Start_minimized.UseVisualStyleBackColor = true;
+            this.Start_minimized.CheckedChanged += new System.EventHandler(this.Start_minimized_CheckedChanged);
             // 
             // Startup
             // 
@@ -299,19 +314,29 @@
             // 
             this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
             this.notifyIcon.Text = "SSU";
-            this.notifyIcon.Visible = true;
             this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyicon_doubleclick);
             // 
-            // Start_minimized
+            // Icon_Menu
             // 
-            this.Start_minimized.AutoSize = true;
-            this.Start_minimized.Location = new System.Drawing.Point(178, 96);
-            this.Start_minimized.Name = "Start_minimized";
-            this.Start_minimized.Size = new System.Drawing.Size(156, 28);
-            this.Start_minimized.TabIndex = 11;
-            this.Start_minimized.Text = "Start minimized";
-            this.Start_minimized.UseVisualStyleBackColor = true;
-            this.Start_minimized.CheckedChanged += new System.EventHandler(this.Start_minimized_CheckedChanged);
+            this.Icon_Menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.Icon_Show,
+            this.Icon_Exit});
+            this.Icon_Menu.Name = "Icon_Menu";
+            this.Icon_Menu.Size = new System.Drawing.Size(104, 48);
+            // 
+            // Icon_Show
+            // 
+            this.Icon_Show.Name = "Icon_Show";
+            this.Icon_Show.Size = new System.Drawing.Size(103, 22);
+            this.Icon_Show.Text = "Show";
+            this.Icon_Show.Click += new System.EventHandler(this.Icon_Show_Click);
+            // 
+            // Icon_Exit
+            // 
+            this.Icon_Exit.Name = "Icon_Exit";
+            this.Icon_Exit.Size = new System.Drawing.Size(103, 22);
+            this.Icon_Exit.Text = "Exit";
+            this.Icon_Exit.Click += new System.EventHandler(this.Icon_Exit_Click);
             // 
             // Main
             // 
@@ -341,6 +366,7 @@
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            this.Icon_Menu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -372,6 +398,9 @@
         private System.Windows.Forms.NotifyIcon notifyIcon;
         private System.Windows.Forms.CheckBox Startup;
         private System.Windows.Forms.CheckBox Start_minimized;
+        private System.Windows.Forms.ContextMenuStrip Icon_Menu;
+        private System.Windows.Forms.ToolStripMenuItem Icon_Show;
+        private System.Windows.Forms.ToolStripMenuItem Icon_Exit;
     }
 }
 
