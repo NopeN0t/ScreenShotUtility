@@ -117,6 +117,7 @@ namespace SSU
             SC_Sample.Text = Path.GetFileName(SC_Lib.GetSCPath());
             SC_name.Text = SC_Lib.res_name;
             Index.Text = $"Image Saved\n{SC_Lib.index}";
+            Icon_Cap.Text = $"{SC_Lib.index}/{SC_cap.Text} Images";
         }
 
         //Unload Hotkey and Save settings

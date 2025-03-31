@@ -55,6 +55,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.Icon_Menu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.Icon_Cap = new System.Windows.Forms.ToolStripMenuItem();
             this.Icon_Show = new System.Windows.Forms.ToolStripMenuItem();
             this.Icon_Exit = new System.Windows.Forms.ToolStripMenuItem();
             this.groupBox1.SuspendLayout();
@@ -150,7 +151,7 @@
             // Start_minimized
             // 
             this.Start_minimized.AutoSize = true;
-            this.Start_minimized.Location = new System.Drawing.Point(178, 96);
+            this.Start_minimized.Location = new System.Drawing.Point(6, 96);
             this.Start_minimized.Name = "Start_minimized";
             this.Start_minimized.Size = new System.Drawing.Size(156, 28);
             this.Start_minimized.TabIndex = 11;
@@ -161,7 +162,7 @@
             // Startup
             // 
             this.Startup.AutoSize = true;
-            this.Startup.Location = new System.Drawing.Point(4, 96);
+            this.Startup.Location = new System.Drawing.Point(6, 62);
             this.Startup.Name = "Startup";
             this.Startup.Size = new System.Drawing.Size(151, 28);
             this.Startup.TabIndex = 10;
@@ -172,7 +173,7 @@
             // process_select
             // 
             this.process_select.Enabled = false;
-            this.process_select.Location = new System.Drawing.Point(317, 25);
+            this.process_select.Location = new System.Drawing.Point(323, 60);
             this.process_select.Margin = new System.Windows.Forms.Padding(2);
             this.process_select.Name = "process_select";
             this.process_select.Size = new System.Drawing.Size(111, 30);
@@ -184,7 +185,7 @@
             // Process_box
             // 
             this.Process_box.Enabled = false;
-            this.Process_box.Location = new System.Drawing.Point(178, 60);
+            this.Process_box.Location = new System.Drawing.Point(184, 95);
             this.Process_box.Name = "Process_box";
             this.Process_box.ReadOnly = true;
             this.Process_box.Size = new System.Drawing.Size(250, 29);
@@ -194,7 +195,7 @@
             // 
             this.Process_label.AutoSize = true;
             this.Process_label.Enabled = false;
-            this.Process_label.Location = new System.Drawing.Point(174, 28);
+            this.Process_label.Location = new System.Drawing.Point(180, 63);
             this.Process_label.Name = "Process_label";
             this.Process_label.Size = new System.Drawing.Size(134, 24);
             this.Process_label.TabIndex = 7;
@@ -203,7 +204,7 @@
             // process_mode
             // 
             this.process_mode.AutoSize = true;
-            this.process_mode.Location = new System.Drawing.Point(4, 62);
+            this.process_mode.Location = new System.Drawing.Point(184, 28);
             this.process_mode.Name = "process_mode";
             this.process_mode.Size = new System.Drawing.Size(168, 28);
             this.process_mode.TabIndex = 9;
@@ -319,22 +320,30 @@
             // Icon_Menu
             // 
             this.Icon_Menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.Icon_Cap,
             this.Icon_Show,
             this.Icon_Exit});
             this.Icon_Menu.Name = "Icon_Menu";
-            this.Icon_Menu.Size = new System.Drawing.Size(104, 48);
+            this.Icon_Menu.ShowImageMargin = false;
+            this.Icon_Menu.Size = new System.Drawing.Size(156, 92);
+            // 
+            // Icon_Cap
+            // 
+            this.Icon_Cap.Name = "Icon_Cap";
+            this.Icon_Cap.Size = new System.Drawing.Size(155, 22);
+            this.Icon_Cap.Text = "000/000 Images";
             // 
             // Icon_Show
             // 
             this.Icon_Show.Name = "Icon_Show";
-            this.Icon_Show.Size = new System.Drawing.Size(103, 22);
+            this.Icon_Show.Size = new System.Drawing.Size(158, 22);
             this.Icon_Show.Text = "Show";
             this.Icon_Show.Click += new System.EventHandler(this.Icon_Show_Click);
             // 
             // Icon_Exit
             // 
             this.Icon_Exit.Name = "Icon_Exit";
-            this.Icon_Exit.Size = new System.Drawing.Size(103, 22);
+            this.Icon_Exit.Size = new System.Drawing.Size(158, 22);
             this.Icon_Exit.Text = "Exit";
             this.Icon_Exit.Click += new System.EventHandler(this.Icon_Exit_Click);
             // 
@@ -401,6 +410,7 @@
         private System.Windows.Forms.ContextMenuStrip Icon_Menu;
         private System.Windows.Forms.ToolStripMenuItem Icon_Show;
         private System.Windows.Forms.ToolStripMenuItem Icon_Exit;
+        private System.Windows.Forms.ToolStripMenuItem Icon_Cap;
     }
 }
 
