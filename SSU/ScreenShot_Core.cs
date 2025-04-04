@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Media;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace SSU
@@ -35,17 +37,30 @@ namespace SSU
         public string res_name { get; set; } = "";
         public string res_prefix { get; set; } = "";
         public string res_path { get; set; } = @"./";
-        public bool sfx { get; set; } = true;
+        public bool sfx { get; set; } = false;
         public int index { get; set; } = 0;
         public string format { get; set; } = "000";
         public Process Select_process { get; set; } = null;
-        
+
         public void TakeScreenShot(Bitmap bm, Point start, Point end, Size size, bool save = true)
         {
             using (Graphics g = Graphics.FromImage(bm))
                 g.CopyFromScreen(start, end, size);
             if (save)
                 bm.Save(GetSCPath(), ImageFormat.Png);
+            //Notify User (if enable)
+            if (sfx)
+            {
+                if (File.Exists(Path.Combine(Global.program_directory, "sfx.wav")))
+                {
+                    SoundPlayer soundPlayer = new SoundPlayer();
+                    soundPlayer.SoundLocation = Path.Combine(Global.program_directory, "./sfx.wav");
+                    soundPlayer.Play();
+                    soundPlayer.Dispose();
+                }
+                else
+                    MessageBox.Show("sfx.wav not found", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         //=============================================================
@@ -56,6 +71,7 @@ namespace SSU
         public int vk { get; set; } = Keys.A.GetHashCode();
         public string vk_str { get; set; } = "A";
         private IntPtr Shortcut_Handle { get; set; }
+        public event EventHandler ScreenshotShortcutTriggered;
         public enum KeyModifier
         {
             None = 0,
@@ -64,10 +80,15 @@ namespace SSU
             Shift = 4,
             WinKey = 8
         }
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [DllImport("user32.dll")]
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetClientRect(IntPtr hWnd, out Rectangle lpRect);
+        [DllImport("user32.dll")]
+        private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
+
         public void Register_key(bool reload = false)
         {
             if (reload)
@@ -78,6 +99,48 @@ namespace SSU
         public void Unregister_key()
         {
             UnregisterHotKey(Shortcut_Handle, 0);
+        }
+
+        public void HandleWndProc(int limit, int mode)
+        {
+            /// <summary>
+            /// mode 0 = Capture entire screen
+            /// mode 1 = Capture selected window
+            /// mode 2 = Capture selected area
+            /// </summary>
+            //Check if limit reached
+            if (index == limit)
+            { MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+            if (mode == 0)
+            {
+                Rectangle bounds = Screen.GetBounds(Point.Empty);
+                using (Bitmap bm = new Bitmap(bounds.Width, bounds.Height))
+                    TakeScreenShot(bm, Point.Empty, Point.Empty, bounds.Size);
+            }
+            else if (mode == 1)
+            {
+                try
+                {
+                    Rectangle rect;
+                    GetClientRect(Global.handle, out rect);
+                    Point topleft = new Point(rect.Left, rect.Top);
+                    ClientToScreen(Global.handle, ref topleft);
+                    //If you want to include titlebar (approximate)
+                    //topleft.Y -= 35;
+                    //rect.Height += 35;
+                    using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
+                        TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
+                }
+                catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+            }
+            else if (mode == 2)
+            {
+                //Todo
+            }
+            else
+                throw new Exception("Invalid mode");
+            index++;
+            ScreenshotShortcutTriggered?.Invoke(this, EventArgs.Empty);
         }
         //=============================================================
         //Universal function

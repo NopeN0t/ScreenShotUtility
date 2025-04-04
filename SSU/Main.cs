@@ -11,13 +11,6 @@ namespace SSU
 {
     public partial class Main : Form
     {
-        //I tried to move it to ScreenShot_Core but it's not working
-        //Due to handle spagetthi, shortcut detection is done here for now
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetClientRect(IntPtr hWnd, out Rectangle lpRect);
-        [DllImport("user32.dll")]
-        private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
-
         //Shortcut Detection
         protected override void WndProc(ref Message m)
         {
@@ -25,46 +18,14 @@ namespace SSU
 
             if (m.Msg == 0x0312) //0x0312 = 786
             {
-                //Check if limit reached
-                if ((SC_Lib.index).ToString() == SC_cap.Text)
-                { MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+                int mode;
                 if (!process_mode.Checked)
-                {
-                    Rectangle bounds = Screen.GetBounds(Point.Empty);
-                    using (Bitmap bm = new Bitmap(bounds.Width, bounds.Height))
-                        SC_Lib.TakeScreenShot(bm, Point.Empty, Point.Empty, bounds.Size);
-                }
+                    mode = 0; //0 capture entire screen
                 else
-                {
-                    try
-                    {
-                        Rectangle rect;
-                        GetClientRect(Global.handle, out rect);
-                        Point topleft = new Point(rect.Left, rect.Top);
-                        ClientToScreen(Global.handle, ref topleft);
-                        //If you want to include titlebar (approximate)
-                        //topleft.Y -= 35;
-                        //rect.Height += 35;
-                        using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
-                            SC_Lib.TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
-                    }
-                    catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
-                }
-                //Notify User (if enable)
-                if (SC_Lib.sfx)
-                {
-                    if (File.Exists(Path.Combine(Global.program_directory, "sfx.wav")))
-                    {
-                        SoundPlayer soundPlayer = new SoundPlayer();
-                        soundPlayer.SoundLocation = Path.Combine(Global.program_directory, "./sfx.wav");
-                        soundPlayer.Play();
-                        soundPlayer.Dispose();
-                    }
-                    else
-                        MessageBox.Show("sfx.wav not found", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-                SC_Lib.index++;
-                Update_preview();
+                    mode = 1; //1 capture selected window
+                //to add 2 capture selected area
+                SC_Lib.HandleWndProc(Convert.ToInt32(SC_cap.Text), mode);
+
             }
         }
         //Actual Code Start's here
@@ -76,6 +37,7 @@ namespace SSU
             //Initialize Hotkey
             SC_Lib = new ScreenShot_Core(this.Handle);
             SC_Lib.Register_key();
+            SC_Lib.ScreenshotShortcutTriggered += (sender,e) => Update_preview();
 
             //Initialize UI
             Update_preview();
@@ -153,7 +115,8 @@ namespace SSU
         {
             FolderBrowserDialog fbd = new FolderBrowserDialog();
             fbd.ShowDialog();
-            Browse_box.Text = fbd.SelectedPath;
+            if (fbd.SelectedPath != "")
+                SC_Lib.res_path = fbd.SelectedPath;
             SC_Lib.SetIndex();
             Update_preview();
         }
