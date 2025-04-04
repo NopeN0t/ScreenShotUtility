@@ -10,19 +10,6 @@ namespace SSU
 {
     public class ScreenShot_Core
     {
-        //Default settings win + shift +  a
-        public int fsModifier { get; set; } = 12;
-        public int vk { get; set; } = Keys.A.GetHashCode();
-        public string vk_str { get; set; } = "A";
-        public string f_path { get; set; } = Path.Combine(Global.program_directory, "shortcut.ini");
-        public string res_name { get; set; } = "";
-        public string res_prefix { get; set; } = "";
-        public string res_path { get; set; } = @"./";
-        public bool sfx { get; set; } = true;
-        public int index { get; set; } = 0;
-        public string format { get; set; } = "000";
-        public Process Select_process { get; set; } = null;
-        private IntPtr Shortcut_Handle { get; set; }
         //Constructor
         public ScreenShot_Core(IntPtr Forms_Handle)
         {
@@ -41,6 +28,34 @@ namespace SSU
             }
             SetIndex();
         }
+        //=============================================================
+        //Screenshot
+        //=============================================================
+        public string f_path { get; set; } = Path.Combine(Global.program_directory, "shortcut.ini");
+        public string res_name { get; set; } = "";
+        public string res_prefix { get; set; } = "";
+        public string res_path { get; set; } = @"./";
+        public bool sfx { get; set; } = true;
+        public int index { get; set; } = 0;
+        public string format { get; set; } = "000";
+        public Process Select_process { get; set; } = null;
+        
+        public void TakeScreenShot(Bitmap bm, Point start, Point end, Size size, bool save = true)
+        {
+            using (Graphics g = Graphics.FromImage(bm))
+                g.CopyFromScreen(start, end, size);
+            if (save)
+                bm.Save(GetSCPath(), ImageFormat.Png);
+        }
+
+        //=============================================================
+        //Hotkey
+        //=============================================================
+        //Default settings win + shift +  a
+        public int fsModifier { get; set; } = 12;
+        public int vk { get; set; } = Keys.A.GetHashCode();
+        public string vk_str { get; set; } = "A";
+        private IntPtr Shortcut_Handle { get; set; }
         public enum KeyModifier
         {
             None = 0,
@@ -49,25 +64,38 @@ namespace SSU
             Shift = 4,
             WinKey = 8
         }
-        public void TakeScreenShot(Bitmap bm, Point start, Point end, Size size, bool save = true)
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+        public void Register_key(bool reload = false)
         {
-            using (Graphics g = Graphics.FromImage(bm))
-                g.CopyFromScreen(start, end, size);
-            if (save)
-                bm.Save(GetSCPath(), ImageFormat.Png);
+            if (reload)
+                UnregisterHotKey(Shortcut_Handle, 0);
+            RegisterHotKey(Shortcut_Handle, 0, fsModifier, vk);
         }
+
+        public void Unregister_key()
+        {
+            UnregisterHotKey(Shortcut_Handle, 0);
+        }
+        //=============================================================
+        //Universal function
+        //=============================================================
         public void SetFormat(int count)
         {
             format = "";
             for (int i = 0; i < count - 1; i++)
                 format += "0";
         }
+
         public void SetIndex()
         {
             index = 0;
             while (File.Exists(GetSCPath()))
                 index++;
         }
+
         //Convert KeyModifier to keyboard keys
         public string GetKeyString()
         {
@@ -84,6 +112,7 @@ namespace SSU
             }
             return s += vk_str;
         }
+
         //Get the final path of the screenshot
         public string GetSCPath()
         {
@@ -92,20 +121,6 @@ namespace SSU
             return s;
         }
 
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-        public void Register_key(bool reload = false)
-        {
-            if (reload)
-                UnregisterHotKey(Shortcut_Handle, 0);
-            RegisterHotKey(Shortcut_Handle, 0, fsModifier, vk);
-        }
-        public void Unregister_key()
-        {
-            UnregisterHotKey(Shortcut_Handle, 0);
-        }
         public void save()
         {
             StreamWriter sw = new StreamWriter(f_path, false);
@@ -120,6 +135,7 @@ namespace SSU
             sw.WriteLine($"file_name = {res_name}");
             sw.Close();
         }
+
         public void load()
         {
             var dict = new Dictionary<string, string>();
