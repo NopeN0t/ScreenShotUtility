@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Media;
@@ -10,21 +11,13 @@ namespace SSU
 {
     public partial class Main : Form
     {
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+        //I tried to move it to ScreenShot_Core but it's not working
+        //Due to handle spagetthi, shortcut detection is done here for now
         [DllImport("user32.dll")]
         private static extern IntPtr GetClientRect(IntPtr hWnd, out Rectangle lpRect);
         [DllImport("user32.dll")]
         private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
 
-        void Register_key(bool reload = false)
-        {
-            if (reload)
-                UnregisterHotKey(this.Handle, 0);
-            RegisterHotKey(this.Handle, 0, SC_Lib.fsModifier, SC_Lib.vk);
-        }
         //Shortcut Detection
         protected override void WndProc(ref Message m)
         {
@@ -75,13 +68,14 @@ namespace SSU
             }
         }
         //Actual Code Start's here
-        ScreenShot_Core SC_Lib = new ScreenShot_Core();
+        ScreenShot_Core SC_Lib;
         bool isInitilized = false;
         public Main()
         {
             InitializeComponent();
             //Initialize Hotkey
-            Register_key();
+            SC_Lib = new ScreenShot_Core(this.Handle);
+            SC_Lib.Register_key();
 
             //Initialize UI
             Update_preview();
@@ -94,20 +88,35 @@ namespace SSU
             Browse_box.Text = SC_Lib.res_path;
             Play_Sound.Checked = SC_Lib.sfx;
             //Auto start
-            RegistryKey rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", false);
-            if (rk != null)
-                Startup.Checked =  rk.GetValue(Global.program_name) != null;
-            else
-                Startup.Checked = false;
+            try
+            {
+                RegistryKey rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+                Startup.Checked = rk?.GetValue(Global.program_name) != null;
+                //Check if auto start is valid (program location, version check)
+                if (Startup.Checked)
+                {
+                    //Path check
+                    if (rk.GetValue(Global.program_name).ToString() != Application.ExecutablePath)
+                    {
+                        rk.DeleteValue(Global.program_name, false);
+                        rk.SetValue(Global.program_name, Application.ExecutablePath);
+                    }
+                    //Version check
+                    FileVersionInfo version = FileVersionInfo.GetVersionInfo(rk.GetValue(Global.program_name).ToString());
+                    if (Global.program_version.FileVersion.CompareTo(version.FileVersion) > 0)
+                    {
+                        rk.DeleteValue(Global.program_name, false);
+                        rk.SetValue(Global.program_name, Application.ExecutablePath);
+                    }
+                }
+            }
+            catch (Exception e)
+            { MessageBox.Show("Error loading startup settings\n" + e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            //Minimize to tray
             Start_minimized.Checked = Properties.Settings.Default.Start_Minimized;
             if (Properties.Settings.Default.Start_Minimized)
                 this.WindowState = FormWindowState.Minimized;
-            //Minimize to tray based on lunch option
-            if (this.WindowState == FormWindowState.Minimized)
-            {
-                this.Hide();
-                notifyIcon.Visible = true;
-            }
+            From_resize(this, null); //Trigger minimize event
             isInitilized = true;
         }
 
@@ -123,7 +132,7 @@ namespace SSU
         //Unload Hotkey and Save settings
         private void Form_close(object sender, FormClosingEventArgs e)
         {
-            UnregisterHotKey(this.Handle, 0);
+            SC_Lib.Unregister_key();
             SC_Lib.save();
         }
 
@@ -135,7 +144,7 @@ namespace SSU
             {
                 Key_box.Text = SC_Lib.GetKeyString();
                 SC_Lib.save();
-                Register_key(true);
+                SC_Lib.Register_key(true);
             }
         }
 

@@ -22,10 +22,11 @@ namespace SSU
         public int index { get; set; } = 0;
         public string format { get; set; } = "000";
         public Process Select_process { get; set; } = null;
-
+        private IntPtr Shortcut_Handle { get; set; }
         //Constructor
-        public ScreenShot_Core()
+        public ScreenShot_Core(IntPtr Forms_Handle)
         {
+            Shortcut_Handle = Forms_Handle;
             try
             {
                 if (File.Exists(f_path))
@@ -89,6 +90,21 @@ namespace SSU
             string s = "";
             s += $"{res_path}/{res_prefix}{index.ToString(format)}{res_name}.png";
             return s;
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+        public void Register_key(bool reload = false)
+        {
+            if (reload)
+                UnregisterHotKey(Shortcut_Handle, 0);
+            RegisterHotKey(Shortcut_Handle, 0, fsModifier, vk);
+        }
+        public void Unregister_key()
+        {
+            UnregisterHotKey(Shortcut_Handle, 0);
         }
         public void save()
         {
