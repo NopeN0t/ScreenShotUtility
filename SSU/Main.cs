@@ -113,7 +113,10 @@ namespace SSU
             FolderBrowserDialog fbd = new FolderBrowserDialog();
             fbd.ShowDialog();
             if (fbd.SelectedPath != "")
+            {
                 SC_Lib.res_path = fbd.SelectedPath;
+                Browse_box.Text = SC_Lib.res_path;
+            }
             SC_Lib.SetIndex();
             Update_preview();
         }
