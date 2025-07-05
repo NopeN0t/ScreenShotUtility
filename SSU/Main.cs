@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using SSU.ScreenShotLib;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -11,19 +12,8 @@ namespace SSU
         //Shortcut Detection
         protected override void WndProc(ref Message m)
         {
-            const int WM_input = 0x00FF;
-            if (m.Msg == WM_input)
-            {
-                MessageBox.Show("");
-                //SC_Lib.HandleRawInput(m);
-                //if (SC_Lib.IsHotkeyPressed())
-                //{
-                //    //Trigger screenshot
-                //    SC_Lib.TakeScreenShot();
-                //    Update_preview();
-                //}
-            }
             base.WndProc(ref m);
+
             if (m.Msg == 0x0312) //0x0312 = 786
             {
                 int mode;
@@ -39,20 +29,16 @@ namespace SSU
         //Actual Code Start's here
         ScreenShot_Core SC_Lib;
         bool isInitilized = false;
+
         public Main()
         {
             InitializeComponent();
             //Initialize Hotkey
             SC_Lib = new ScreenShot_Core(this.Handle);
-            SC_Lib.Warning += (sender, message) => MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            SC_Lib.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
-            //SC_Lib.Register_key();
+            SC_Lib.RegisterRawInput();
+            ScreenShot_Events.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
+            ScreenShot_Events.Warning += (sender, e) => MessageBox.Show(e, "Warning");
 
-            try
-            { SC_Lib.RegisterRawInput(); }
-            catch (Exception e)
-            { MessageBox.Show($"Fatal Error : {e.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); Application.Exit(); }
-            
             //Initialize UI
             Update_preview();
             notifyIcon.ContextMenuStrip = Icon_Menu;
@@ -108,10 +94,8 @@ namespace SSU
         //Unload Hotkey and Save settings
         private void Form_close(object sender, FormClosingEventArgs e)
         {
-            try
-            { SC_Lib.UnregisterRawInput(); }
-            finally
-            { SC_Lib.Save(); }
+            SC_Lib.UnregisterRawInput();
+            SC_Lib.save();
         }
 
         private void Key_set_Click(object sender, EventArgs e)
@@ -121,8 +105,9 @@ namespace SSU
             if (ck.ShowDialog() == DialogResult.OK)
             {
                 Key_box.Text = SC_Lib.GetKeyString();
-                SC_Lib.Save();
-                //SC_Lib.Register_key(true);
+                SC_Lib.save();
+                SC_Lib.UnregisterRawInput();
+                SC_Lib.RegisterRawInput();
             }
         }
 

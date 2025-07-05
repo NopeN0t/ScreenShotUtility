@@ -8,11 +8,10 @@ using System.Media;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace SSU
+namespace SSU.ScreenShotLib
 {
-    public class ScreenShot_Core
+    public partial class ScreenShot_Core
     {
-        public event EventHandler<string> Warning;
         //Constructor
         public ScreenShot_Core(IntPtr Forms_Handle)
         {
@@ -20,14 +19,14 @@ namespace SSU
             try
             {
                 if (File.Exists(F_path))
-                    Load();
+                    load();
                 else
-                    Save();
+                    save();
             }
             catch
             {
-                Warning?.Invoke(this, "Error Loading Settings");
-                Save();
+                ScreenShot_Events.RaiseWarning(this, "Error Loading Settings");
+                save();
             }
             SetIndex();
         }
@@ -54,12 +53,13 @@ namespace SSU
             {
                 if (File.Exists(Path.Combine(Global.program_directory, "sfx.wav")))
                 {
-                    SoundPlayer soundPlayer = new SoundPlayer { SoundLocation = Path.Combine(Global.program_directory, "./sfx.wav") };
+                    SoundPlayer soundPlayer = new SoundPlayer();
+                    soundPlayer.SoundLocation = Path.Combine(Global.program_directory, "./sfx.wav");
                     soundPlayer.Play();
                     soundPlayer.Dispose();
                 }
                 else
-                    Warning?.Invoke(this, "sfx.wav not found");   
+                    ScreenShot_Events.RaiseWarning(this, "sfx.wav not found");
             }
         }
 
@@ -85,7 +85,7 @@ namespace SSU
         private static extern IntPtr GetClientRect(IntPtr hWnd, out Rectangle lpRect);
         [DllImport("user32.dll")]
         private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
-        
+
         //New key registeration method
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool RegisterRawInputDevices(RawInputDevice[] pRawInputDevice, uint uiNumDevices, uint cbSize);
@@ -98,7 +98,7 @@ namespace SSU
             public uint Flags;
             public IntPtr Target;
         }
-        
+
         public void RegisterRawInput()
         {
             RawInputDevice[] rid = new RawInputDevice[1];
@@ -121,7 +121,7 @@ namespace SSU
             rid[0].Usage = 0x06; //it's a keyboard
             rid[0].Flags = 0x00000001; //Unregister
             rid[0].Target = IntPtr.Zero;
-            if(!RegisterRawInputDevices(rid, (uint)rid.Length, (uint)Marshal.SizeOf(typeof(RawInputDevice))))
+            if (!RegisterRawInputDevices(rid, (uint)rid.Length, (uint)Marshal.SizeOf(typeof(RawInputDevice))))
             {
                 //Fatal error
                 int errorCode = Marshal.GetLastWin32Error();
@@ -137,7 +137,7 @@ namespace SSU
             /// </summary>
             //Check if limit reached
             if (Index == limit)
-            { Warning?.Invoke(this, "Limit Reached"); return; }
+            { ScreenShot_Events.RaiseWarning(this, "Limit Reached"); return; }
             if (mode == 0)
             {
                 Rectangle bounds = Screen.GetBounds(Point.Empty);
@@ -157,7 +157,7 @@ namespace SSU
                     using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
                         TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
                 }
-                catch { Warning?.Invoke(this, "Invalid selection"); return; }
+                catch { ScreenShot_Events.RaiseWarning(this, "Invalid selection"); return; }
             }
             else if (mode == 2)
             {
@@ -210,7 +210,7 @@ namespace SSU
             return s;
         }
 
-        public void Save()
+        public void save()
         {
             StreamWriter sw = new StreamWriter(F_path, false);
             sw.WriteLine("[infos]");
@@ -225,7 +225,7 @@ namespace SSU
             sw.Close();
         }
 
-        public void Load()
+        public void load()
         {
             var dict = new Dictionary<string, string>();
             StreamReader sr = new StreamReader(F_path);
