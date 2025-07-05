@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SSU.ScreenShotLib;
+using System;
 using System.Windows.Forms;
 
 namespace SSU

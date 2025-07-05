@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SSU.ScreenShotLib;
+using System;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;

@@ -71,7 +71,6 @@ namespace SSU.ScreenShotLib
         public int Vk { get; set; } = Keys.A.GetHashCode();
         public string Vk_str { get; set; } = "A";
         private IntPtr Shortcut_Handle { get; set; }
-        public event EventHandler ScreenshotShortcutTriggered;
         public enum KeyModifier
         {
             None = 0,
@@ -166,7 +165,7 @@ namespace SSU.ScreenShotLib
             else
                 throw new Exception("Invalid mode");
             Index++;
-            ScreenshotShortcutTriggered?.Invoke(this, EventArgs.Empty);
+            ScreenShot_Events.RaiseShortcutTrigger(this);
         }
         //=============================================================
         //Universal function
