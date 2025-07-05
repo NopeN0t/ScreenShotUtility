@@ -66,8 +66,8 @@ namespace SSU.ScreenShotLib
         //=============================================================
         //Hotkey
         //=============================================================
-        //Default settings win + shift +  a
-        public int FsModifier { get; set; } = 12;
+        //Default settings ctrl + alt +  a
+        public int FsModifier { get; set; } = 3;
         public int Vk { get; set; } = Keys.A.GetHashCode();
         public string Vk_str { get; set; } = "A";
         private IntPtr Shortcut_Handle { get; set; }
@@ -89,13 +89,42 @@ namespace SSU.ScreenShotLib
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool RegisterRawInputDevices(RawInputDevice[] pRawInputDevice, uint uiNumDevices, uint cbSize);
         [DllImport("user32.dll")]
-        private static extern IntPtr GetRawInputData(IntPtr hRawInput, uint uiCommand, IntPtr pData, ref uint pcbSize, uint cbSizeHeader);
+        private static extern int GetRawInputData(IntPtr hRawInput, uint uiCommand, IntPtr pData, ref uint pcbSize, uint cbSizeHeader);
+
         private struct RawInputDevice
         {
             public ushort UsagePage;
             public ushort Usage;
             public uint Flags;
             public IntPtr Target;
+        }
+
+        // RAWINPUT structures
+        [StructLayout(LayoutKind.Sequential)]
+        struct RAWINPUTHEADER
+        {
+            public uint dwType;
+            public uint dwSize;
+            public IntPtr hDevice;
+            public IntPtr wParam;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct RAWKEYBOARD
+        {
+            public ushort MakeCode;
+            public ushort Flags;
+            public ushort Reserved;
+            public ushort VKey;
+            public uint Message;
+            public uint ExtraInformation;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct RAWINPUT
+        {
+            public RAWINPUTHEADER header;
+            public RAWKEYBOARD keyboard;
         }
 
         public void RegisterRawInput()
@@ -127,6 +156,49 @@ namespace SSU.ScreenShotLib
                 throw new Exception($"Failed to unregister raw input device. Error code: {errorCode}");
             }
         }
+        public bool ProcessRawInput(IntPtr lParam)
+        {
+            // RAWINPUT structure
+            const int RID_INPUT = 0x10000003;
+            uint dwSize = 0;
+            GetRawInputData(lParam, RID_INPUT, IntPtr.Zero, ref dwSize, (uint)Marshal.SizeOf(typeof(RAWINPUTHEADER)));
+            if (dwSize == 0) return false;
+
+            IntPtr buffer = Marshal.AllocHGlobal((int)dwSize);
+            try
+            {
+                if (GetRawInputData(lParam, RID_INPUT, buffer, ref dwSize, (uint)Marshal.SizeOf(typeof(RAWINPUTHEADER))) != dwSize)
+                    return false;
+
+                RAWINPUT raw = (RAWINPUT)Marshal.PtrToStructure(buffer, typeof(RAWINPUT));
+                if (raw.header.dwType == 1) // Keyboard
+                {
+                    // Only process key down events
+                    if (raw.keyboard.Message == 0x0100 || raw.keyboard.Message == 0x0104) // WM_KEYDOWN or WM_SYSKEYDOWN
+                    {
+                        Keys key = (Keys)raw.keyboard.VKey;
+                        int modifiers = 0;
+                        if ((Control.ModifierKeys & Keys.LWin) == Keys.LWin) modifiers += 8;
+                        if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift) modifiers += 4;
+                        if ((Control.ModifierKeys & Keys.Control) == Keys.Control) modifiers += 2;
+                        if ((Control.ModifierKeys & Keys.Alt) == Keys.Alt) modifiers += 1;
+
+                        if (key.GetHashCode() == Vk && modifiers == FsModifier)
+                        {
+                            return true;    
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+            return false;
+        }
+
+
+        //Take ScreenShot
         public void HandleWndProc(int limit, int mode)
         {
             /// <summary>
@@ -167,6 +239,8 @@ namespace SSU.ScreenShotLib
             Index++;
             ScreenShot_Events.RaiseShortcutTrigger(this);
         }
+
+
         //=============================================================
         //Universal function
         //=============================================================

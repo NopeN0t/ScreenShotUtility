@@ -12,9 +12,8 @@ namespace SSU
         //Shortcut Detection
         protected override void WndProc(ref Message m)
         {
-            base.WndProc(ref m);
-
-            if (m.Msg == 0x0312) //0x0312 = 786
+            //0x0312 = 786 (RegisterHotKey Method)
+            if (m.Msg == 0x00FF) //RawInput Method
             {
                 int mode;
                 if (!process_mode.Checked)
@@ -22,9 +21,10 @@ namespace SSU
                 else
                     mode = 1; //1 capture selected window
                 //to add 2 capture selected area
-                SC_Lib.HandleWndProc(Convert.ToInt32(SC_cap.Text), mode);
-
+                if (SC_Lib.ProcessRawInput(m.LParam))
+                    SC_Lib.HandleWndProc(Convert.ToInt32(SC_cap.Text), mode);
             }
+            base.WndProc(ref m);
         }
         //Actual Code Start's here
         ScreenShot_Core SC_Lib;
@@ -35,7 +35,12 @@ namespace SSU
             InitializeComponent();
             //Initialize Hotkey
             SC_Lib = new ScreenShot_Core(this.Handle);
-            SC_Lib.RegisterRawInput();
+            try
+            {
+                SC_Lib.RegisterRawInput();
+            }
+            catch { MessageBox.Show("Failed To Register ShortCut", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+
             ScreenShot_Events.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
             ScreenShot_Events.Warning += (sender, e) => MessageBox.Show(e, "Warning");
 
@@ -94,7 +99,11 @@ namespace SSU
         //Unload Hotkey and Save settings
         private void Form_close(object sender, FormClosingEventArgs e)
         {
-            SC_Lib.UnregisterRawInput();
+            try
+            {
+                SC_Lib.UnregisterRawInput();
+            }
+            catch { }
             SC_Lib.save();
         }
 
@@ -106,8 +115,12 @@ namespace SSU
             {
                 Key_box.Text = SC_Lib.GetKeyString();
                 SC_Lib.save();
-                SC_Lib.UnregisterRawInput();
-                SC_Lib.RegisterRawInput();
+                try
+                {
+                    SC_Lib.UnregisterRawInput();
+                    SC_Lib.RegisterRawInput();
+                }
+                catch { MessageBox.Show("Failed To Change Shortcut", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
         }
 
