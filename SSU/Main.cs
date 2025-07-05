@@ -11,8 +11,19 @@ namespace SSU
         //Shortcut Detection
         protected override void WndProc(ref Message m)
         {
+            const int WM_input = 0x00FF;
+            if (m.Msg == WM_input)
+            {
+                MessageBox.Show("");
+                //SC_Lib.HandleRawInput(m);
+                //if (SC_Lib.IsHotkeyPressed())
+                //{
+                //    //Trigger screenshot
+                //    SC_Lib.TakeScreenShot();
+                //    Update_preview();
+                //}
+            }
             base.WndProc(ref m);
-
             if (m.Msg == 0x0312) //0x0312 = 786
             {
                 int mode;
@@ -33,19 +44,25 @@ namespace SSU
             InitializeComponent();
             //Initialize Hotkey
             SC_Lib = new ScreenShot_Core(this.Handle);
-            SC_Lib.Register_key();
-            SC_Lib.ScreenshotShortcutTriggered += (sender,e) => Update_preview();
+            SC_Lib.Warning += (sender, message) => MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            SC_Lib.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
+            //SC_Lib.Register_key();
 
+            try
+            { SC_Lib.RegisterRawInput(); }
+            catch (Exception e)
+            { MessageBox.Show($"Fatal Error : {e.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); Application.Exit(); }
+            
             //Initialize UI
             Update_preview();
             notifyIcon.ContextMenuStrip = Icon_Menu;
             Key_box.Text = SC_Lib.GetKeyString();
             string s = "1";
-            for (int i = 0; i < SC_Lib.format.Length; i++)
+            for (int i = 0; i < SC_Lib.Format.Length; i++)
                 s += "0";
             SC_cap.Text = s;
-            Browse_box.Text = SC_Lib.res_path;
-            Play_Sound.Checked = SC_Lib.sfx;
+            Browse_box.Text = SC_Lib.Res_path;
+            Play_Sound.Checked = SC_Lib.Sfx;
             //Auto start
             try
             {
@@ -83,16 +100,18 @@ namespace SSU
         void Update_preview()
         {
             SC_Sample.Text = Path.GetFileName(SC_Lib.GetSCPath());
-            SC_name.Text = SC_Lib.res_name;
-            Index.Text = $"Image Saved\n{SC_Lib.index}";
-            Icon_Cap.Text = $"{SC_Lib.index}/{SC_cap.Text} Images";
+            SC_name.Text = SC_Lib.Res_name;
+            Index.Text = $"Image Saved\n{SC_Lib.Index}";
+            Icon_Cap.Text = $"{SC_Lib.Index}/{SC_cap.Text} Images";
         }
 
         //Unload Hotkey and Save settings
         private void Form_close(object sender, FormClosingEventArgs e)
         {
-            SC_Lib.Unregister_key();
-            SC_Lib.save();
+            try
+            { SC_Lib.UnregisterRawInput(); }
+            finally
+            { SC_Lib.Save(); }
         }
 
         private void Key_set_Click(object sender, EventArgs e)
@@ -102,8 +121,8 @@ namespace SSU
             if (ck.ShowDialog() == DialogResult.OK)
             {
                 Key_box.Text = SC_Lib.GetKeyString();
-                SC_Lib.save();
-                SC_Lib.Register_key(true);
+                SC_Lib.Save();
+                //SC_Lib.Register_key(true);
             }
         }
 
@@ -114,8 +133,8 @@ namespace SSU
             fbd.ShowDialog();
             if (fbd.SelectedPath != "")
             {
-                SC_Lib.res_path = fbd.SelectedPath;
-                Browse_box.Text = SC_Lib.res_path;
+                SC_Lib.Res_path = fbd.SelectedPath;
+                Browse_box.Text = SC_Lib.Res_path;
             }
             SC_Lib.SetIndex();
             Update_preview();
@@ -124,20 +143,20 @@ namespace SSU
         //Update save path
         private void Browse_box_TextChanged(object sender, EventArgs e)
         {
-            SC_Lib.res_path = Browse_box.Text;
+            SC_Lib.Res_path = Browse_box.Text;
             SC_Lib.SetIndex();
             Update_preview();
         }
 
         private void Play_Sound_CheckedChanged(object sender, EventArgs e)
         {
-            SC_Lib.sfx = Play_Sound.Checked;
+            SC_Lib.Sfx = Play_Sound.Checked;
         }
 
         //Update save name
         private void SC_name_TextChanged(object sender, EventArgs e)
         {
-            SC_Lib.res_name = SC_name.Text;
+            SC_Lib.Res_name = SC_name.Text;
             SC_Lib.SetIndex();
             Update_preview();
         }
@@ -166,7 +185,7 @@ namespace SSU
 
         private void SC_prefix_TextChanged(object sender, EventArgs e)
         {
-            SC_Lib.res_prefix = SC_prefix.Text;
+            SC_Lib.Res_prefix = SC_prefix.Text;
             SC_Lib.SetIndex();
             Update_preview();
         }

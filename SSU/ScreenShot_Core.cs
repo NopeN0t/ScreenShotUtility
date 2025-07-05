@@ -12,34 +12,35 @@ namespace SSU
 {
     public class ScreenShot_Core
     {
+        public event EventHandler<string> Warning;
         //Constructor
         public ScreenShot_Core(IntPtr Forms_Handle)
         {
             Shortcut_Handle = Forms_Handle;
             try
             {
-                if (File.Exists(f_path))
-                    load();
+                if (File.Exists(F_path))
+                    Load();
                 else
-                    save();
+                    Save();
             }
             catch
             {
-                MessageBox.Show("Error Loading Settings", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                save();
+                Warning?.Invoke(this, "Error Loading Settings");
+                Save();
             }
             SetIndex();
         }
         //=============================================================
         //Screenshot
         //=============================================================
-        public string f_path { get; set; } = Path.Combine(Global.program_directory, "shortcut.ini");
-        public string res_name { get; set; } = "";
-        public string res_prefix { get; set; } = "";
-        public string res_path { get; set; } = @"./";
-        public bool sfx { get; set; } = false;
-        public int index { get; set; } = 0;
-        public string format { get; set; } = "000";
+        public string F_path { get; set; } = Path.Combine(Global.program_directory, "shortcut.ini");
+        public string Res_name { get; set; } = "";
+        public string Res_prefix { get; set; } = "";
+        public string Res_path { get; set; } = @"./";
+        public bool Sfx { get; set; } = false;
+        public int Index { get; set; } = 0;
+        public string Format { get; set; } = "000";
         public Process Select_process { get; set; } = null;
 
         public void TakeScreenShot(Bitmap bm, Point start, Point end, Size size, bool save = true)
@@ -49,17 +50,16 @@ namespace SSU
             if (save)
                 bm.Save(GetSCPath(), ImageFormat.Png);
             //Notify User (if enable)
-            if (sfx)
+            if (Sfx)
             {
                 if (File.Exists(Path.Combine(Global.program_directory, "sfx.wav")))
                 {
-                    SoundPlayer soundPlayer = new SoundPlayer();
-                    soundPlayer.SoundLocation = Path.Combine(Global.program_directory, "./sfx.wav");
+                    SoundPlayer soundPlayer = new SoundPlayer { SoundLocation = Path.Combine(Global.program_directory, "./sfx.wav") };
                     soundPlayer.Play();
                     soundPlayer.Dispose();
                 }
                 else
-                    MessageBox.Show("sfx.wav not found", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Warning?.Invoke(this, "sfx.wav not found");   
             }
         }
 
@@ -67,9 +67,9 @@ namespace SSU
         //Hotkey
         //=============================================================
         //Default settings win + shift +  a
-        public int fsModifier { get; set; } = 12;
-        public int vk { get; set; } = Keys.A.GetHashCode();
-        public string vk_str { get; set; } = "A";
+        public int FsModifier { get; set; } = 12;
+        public int Vk { get; set; } = Keys.A.GetHashCode();
+        public string Vk_str { get; set; } = "A";
         private IntPtr Shortcut_Handle { get; set; }
         public event EventHandler ScreenshotShortcutTriggered;
         public enum KeyModifier
@@ -80,27 +80,54 @@ namespace SSU
             Shift = 4,
             WinKey = 8
         }
-        [DllImport("user32.dll")]
-        private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
-        [DllImport("user32.dll")]
-        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
         [DllImport("user32.dll")]
         private static extern IntPtr GetClientRect(IntPtr hWnd, out Rectangle lpRect);
         [DllImport("user32.dll")]
         private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
-
-        public void Register_key(bool reload = false)
+        
+        //New key registeration method
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool RegisterRawInputDevices(RawInputDevice[] pRawInputDevice, uint uiNumDevices, uint cbSize);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetRawInputData(IntPtr hRawInput, uint uiCommand, IntPtr pData, ref uint pcbSize, uint cbSizeHeader);
+        private struct RawInputDevice
         {
-            if (reload)
-                UnregisterHotKey(Shortcut_Handle, 0);
-            RegisterHotKey(Shortcut_Handle, 0, fsModifier, vk);
+            public ushort UsagePage;
+            public ushort Usage;
+            public uint Flags;
+            public IntPtr Target;
         }
-
-        public void Unregister_key()
+        
+        public void RegisterRawInput()
         {
-            UnregisterHotKey(Shortcut_Handle, 0);
-        }
+            RawInputDevice[] rid = new RawInputDevice[1];
+            rid[0].UsagePage = 0x01; // Generic input device
+            rid[0].Usage = 0x06; // Keyboard
+            rid[0].Flags = 0x00000100; // Always capture input
+            rid[0].Target = Shortcut_Handle;
 
+            if (!RegisterRawInputDevices(rid, (uint)rid.Length, (uint)Marshal.SizeOf(typeof(RawInputDevice))))
+            {
+                //Fatal error
+                int errorCode = Marshal.GetLastWin32Error();
+                throw new Exception($"Failed to register raw input device. Error code: {errorCode}");
+            }
+        }
+        public void UnregisterRawInput()
+        {
+            RawInputDevice[] rid = new RawInputDevice[1];
+            rid[0].UsagePage = 0x01; //Generic input device
+            rid[0].Usage = 0x06; //it's a keyboard
+            rid[0].Flags = 0x00000001; //Unregister
+            rid[0].Target = IntPtr.Zero;
+            if(!RegisterRawInputDevices(rid, (uint)rid.Length, (uint)Marshal.SizeOf(typeof(RawInputDevice))))
+            {
+                //Fatal error
+                int errorCode = Marshal.GetLastWin32Error();
+                throw new Exception($"Failed to unregister raw input device. Error code: {errorCode}");
+            }
+        }
         public void HandleWndProc(int limit, int mode)
         {
             /// <summary>
@@ -109,8 +136,8 @@ namespace SSU
             /// mode 2 = Capture selected area
             /// </summary>
             //Check if limit reached
-            if (index == limit)
-            { MessageBox.Show("Limit Reached", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+            if (Index == limit)
+            { Warning?.Invoke(this, "Limit Reached"); return; }
             if (mode == 0)
             {
                 Rectangle bounds = Screen.GetBounds(Point.Empty);
@@ -121,8 +148,7 @@ namespace SSU
             {
                 try
                 {
-                    Rectangle rect;
-                    GetClientRect(Global.handle, out rect);
+                    GetClientRect(Global.handle, out Rectangle rect);
                     Point topleft = new Point(rect.Left, rect.Top);
                     ClientToScreen(Global.handle, ref topleft);
                     //If you want to include titlebar (approximate)
@@ -131,7 +157,7 @@ namespace SSU
                     using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
                         TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
                 }
-                catch { MessageBox.Show("Invalid selection", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+                catch { Warning?.Invoke(this, "Invalid selection"); return; }
             }
             else if (mode == 2)
             {
@@ -139,7 +165,7 @@ namespace SSU
             }
             else
                 throw new Exception("Invalid mode");
-            index++;
+            Index++;
             ScreenshotShortcutTriggered?.Invoke(this, EventArgs.Empty);
         }
         //=============================================================
@@ -147,22 +173,22 @@ namespace SSU
         //=============================================================
         public void SetFormat(int count)
         {
-            format = "";
+            Format = "";
             for (int i = 0; i < count - 1; i++)
-                format += "0";
+                Format += "0";
         }
 
         public void SetIndex()
         {
-            index = 0;
+            Index = 0;
             while (File.Exists(GetSCPath()))
-                index++;
+                Index++;
         }
 
         //Convert KeyModifier to keyboard keys
         public string GetKeyString()
         {
-            int n = fsModifier;
+            int n = FsModifier;
             var modifiers = new[] { ("Win", 8), ("Shift", 4), ("Ctrl", 2), ("Alt", 1) };
             string s = "";
             foreach (var modifier in modifiers)
@@ -173,36 +199,36 @@ namespace SSU
                     n -= modifier.Item2;
                 }
             }
-            return s += vk_str;
+            return s += Vk_str;
         }
 
         //Get the final path of the screenshot
         public string GetSCPath()
         {
             string s = "";
-            s += $"{res_path}/{res_prefix}{index.ToString(format)}{res_name}.png";
+            s += $"{Res_path}/{Res_prefix}{Index.ToString(Format)}{Res_name}.png";
             return s;
         }
 
-        public void save()
+        public void Save()
         {
-            StreamWriter sw = new StreamWriter(f_path, false);
+            StreamWriter sw = new StreamWriter(F_path, false);
             sw.WriteLine("[infos]");
-            sw.WriteLine($"fsModifier = {fsModifier}");
-            sw.WriteLine($"vk = {vk}");
-            sw.WriteLine($"vk_str = {vk_str}");
-            sw.WriteLine($"res_path = {res_path}");
-            sw.WriteLine($"res_prefix = {res_prefix}");
-            sw.WriteLine($"sfx = {sfx}");
-            sw.WriteLine($"format = {format}");
-            sw.WriteLine($"file_name = {res_name}");
+            sw.WriteLine($"fsModifier = {FsModifier}");
+            sw.WriteLine($"vk = {Vk}");
+            sw.WriteLine($"vk_str = {Vk_str}");
+            sw.WriteLine($"res_path = {Res_path}");
+            sw.WriteLine($"res_prefix = {Res_prefix}");
+            sw.WriteLine($"sfx = {Sfx}");
+            sw.WriteLine($"format = {Format}");
+            sw.WriteLine($"file_name = {Res_name}");
             sw.Close();
         }
 
-        public void load()
+        public void Load()
         {
             var dict = new Dictionary<string, string>();
-            StreamReader sr = new StreamReader(f_path);
+            StreamReader sr = new StreamReader(F_path);
             while (!sr.EndOfStream)
             {
                 string s = sr.ReadLine();
@@ -212,14 +238,14 @@ namespace SSU
                 dict[s2[0].Trim()] = s2[1].Trim();
             }
             sr.Close();
-            fsModifier = Convert.ToInt32(dict["fsModifier"]);
-            vk = Convert.ToInt32(dict["vk"]);
-            vk_str = dict["vk_str"];
-            res_path = dict["res_path"];
-            sfx = Convert.ToBoolean(dict["sfx"]);
-            format = dict["format"];
-            res_name = dict["file_name"];
-            res_prefix = dict["res_prefix"];
+            FsModifier = Convert.ToInt32(dict["fsModifier"]);
+            Vk = Convert.ToInt32(dict["vk"]);
+            Vk_str = dict["vk_str"];
+            Res_path = dict["res_path"];
+            Sfx = Convert.ToBoolean(dict["sfx"]);
+            Format = dict["format"];
+            Res_name = dict["file_name"];
+            Res_prefix = dict["res_prefix"];
         }
     }
 }

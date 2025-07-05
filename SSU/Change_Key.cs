@@ -51,14 +51,14 @@ namespace SSU
 
         private void Done_Click(object sender, EventArgs e)
         {
-            SC_Lib.vk = (int)Enum.Parse(typeof(Keys), key_box.Text);
-            SC_Lib.vk_str = key_box.Text.ToString();
+            SC_Lib.Vk = (int)Enum.Parse(typeof(Keys), key_box.Text);
+            SC_Lib.Vk_str = key_box.Text.ToString();
             int n = 0;
             if (win_key.Checked) n += 8;
             if (shift_key.Checked) n += 4;
             if (ctrl_key.Checked) n += 2;
             if (alt_key.Checked) n += 1;
-            SC_Lib.fsModifier = n;
+            SC_Lib.FsModifier = n;
             DialogResult = DialogResult.OK;
         }
     }
