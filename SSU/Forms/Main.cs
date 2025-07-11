@@ -27,22 +27,23 @@ namespace SSU
             base.WndProc(ref m);
         }
         //Actual Code Start's here
-        ScreenShot_Core SC_Lib;
+        ScreenShot_Core_Old SC_Lib;
         bool isInitilized = false;
 
         public Main()
         {
             InitializeComponent();
+
             //Initialize Hotkey
-            SC_Lib = new ScreenShot_Core(this.Handle);
+            SC_Lib = new ScreenShot_Core_Old(this.Handle);
             try
             {
                 SC_Lib.RegisterRawInput();
             }
             catch { MessageBox.Show("Failed To Register ShortCut", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error); }
 
-            ScreenShot_Events.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
-            ScreenShot_Events.Warning += (sender, e) => MessageBox.Show(e, "Warning");
+            ScreenShot_Events_Old.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
+            ScreenShot_Events_Old.Warning += (sender, e) => MessageBox.Show(e, "Warning");
 
             //Initialize UI
             Update_preview();

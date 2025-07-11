@@ -10,7 +10,7 @@ namespace SSU
 {
     public partial class Select_Process : Form
     {   //SC_Core passed from main form
-        public ScreenShot_Core SC_Lib;
+        public ScreenShot_Core_Old SC_Lib;
         public Select_Process()
         {
             InitializeComponent();

@@ -52,33 +52,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Change_Key.cs">
+    <Compile Include="Forms\Change_Key.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Change_Key.Designer.cs">
+    <Compile Include="Forms\Change_Key.Designer.cs">
       <DependentUpon>Change_Key.cs</DependentUpon>
     </Compile>
     <Compile Include="Global.cs" />
-    <Compile Include="Main.cs">
+    <Compile Include="Forms\Main.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Main.Designer.cs">
+    <Compile Include="Forms\Main.Designer.cs">
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
     <Compile Include="ScreenShotLib\ScreenShot_Core.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScreenShotLib\ScreenShot_Events.cs" />
-    <Compile Include="Select_Process.cs">
+    <Compile Include="Forms\Select_Process.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Select_Process.Designer.cs">
+    <Compile Include="Forms\Select_Process.Designer.cs">
       <DependentUpon>Select_Process.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Change_Key.resx">
+    <EmbeddedResource Include="Forms\Change_Key.resx">
       <DependentUpon>Change_Key.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Main.resx">
+    <EmbeddedResource Include="Forms\Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -90,7 +90,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Select_Process.resx">
+    <EmbeddedResource Include="Forms\Select_Process.resx">
       <DependentUpon>Select_Process.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="mani.manifest" />

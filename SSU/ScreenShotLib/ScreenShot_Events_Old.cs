@@ -2,7 +2,7 @@
 
 namespace SSU.ScreenShotLib
 {
-    public static class ScreenShot_Events
+    public static class ScreenShot_Events_Old
     {
         public static event EventHandler<string> Warning;
         public static event EventHandler<string> Error;

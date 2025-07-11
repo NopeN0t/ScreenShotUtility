@@ -10,10 +10,10 @@ using System.Windows.Forms;
 
 namespace SSU.ScreenShotLib
 {
-    public partial class ScreenShot_Core
+    public partial class ScreenShot_Core_Old
     {
         //Constructor
-        public ScreenShot_Core(IntPtr Forms_Handle)
+        public ScreenShot_Core_Old(IntPtr Forms_Handle)
         {
             Shortcut_Handle = Forms_Handle;
             try
@@ -25,7 +25,7 @@ namespace SSU.ScreenShotLib
             }
             catch
             {
-                ScreenShot_Events.RaiseWarning(this, "Error Loading Settings");
+                ScreenShot_Events_Old.RaiseWarning(this, "Error Loading Settings");
                 save();
             }
             SetIndex();
@@ -59,7 +59,7 @@ namespace SSU.ScreenShotLib
                     soundPlayer.Dispose();
                 }
                 else
-                    ScreenShot_Events.RaiseWarning(this, "sfx.wav not found");
+                    ScreenShot_Events_Old.RaiseWarning(this, "sfx.wav not found");
             }
         }
 
@@ -185,7 +185,7 @@ namespace SSU.ScreenShotLib
 
                         if (key.GetHashCode() == Vk && modifiers == FsModifier)
                         {
-                            return true;    
+                            return true;
                         }
                     }
                 }
@@ -208,7 +208,7 @@ namespace SSU.ScreenShotLib
             /// </summary>
             //Check if limit reached
             if (Index == limit)
-            { ScreenShot_Events.RaiseWarning(this, "Limit Reached"); return; }
+            { ScreenShot_Events_Old.RaiseWarning(this, "Limit Reached"); return; }
             if (mode == 0)
             {
                 Rectangle bounds = Screen.GetBounds(Point.Empty);
@@ -228,7 +228,7 @@ namespace SSU.ScreenShotLib
                     using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
                         TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
                 }
-                catch { ScreenShot_Events.RaiseWarning(this, "Invalid selection"); return; }
+                catch { ScreenShot_Events_Old.RaiseWarning(this, "Invalid selection"); return; }
             }
             else if (mode == 2)
             {
@@ -237,7 +237,7 @@ namespace SSU.ScreenShotLib
             else
                 throw new Exception("Invalid mode");
             Index++;
-            ScreenShot_Events.RaiseShortcutTrigger(this);
+            ScreenShot_Events_Old.RaiseShortcutTrigger(this);
         }
 
 
