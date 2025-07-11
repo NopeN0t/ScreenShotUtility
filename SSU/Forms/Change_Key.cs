@@ -52,6 +52,14 @@ namespace SSU
 
         private void Done_Click(object sender, EventArgs e)
         {
+            if (win_key.Checked)
+            {
+                if(MessageBox.Show("Windows key have a VERY HIGH chance of Failing to work.\nAre you sure you want to use it?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+                {
+                    win_key.Checked = false;
+                    return;
+                }
+            }
             SC_Lib.Vk = (int)Enum.Parse(typeof(Keys), key_box.Text);
             SC_Lib.Vk_str = key_box.Text.ToString();
             int n = 0;

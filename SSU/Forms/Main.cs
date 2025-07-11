@@ -19,7 +19,8 @@ namespace SSU
 
             //Initialize Hotkey
             SC_Engine = new ScreenShot_Engine();
-            SC_Engine.RegisterRawInput();
+            try { SC_Engine.RegisterRawInput(); }
+            catch { MessageBox.Show("Error", "Failed To Register RawInput", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1); }
             ScreenShot_Events.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
             ScreenShot_Events.Warning += (sender, e) => MessageBox.Show(e, "Warning");
 
@@ -83,10 +84,7 @@ namespace SSU
         //Unload Hotkey and Save settings
         private void Form_close(object sender, FormClosingEventArgs e)
         {
-            try
-            {
-                SC_Engine.UnregisterRawInput();
-            }
+            try { SC_Engine.UnregisterRawInput(); }
             catch { }
             SC_Engine.SaveSettings();
         }

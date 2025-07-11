@@ -62,6 +62,7 @@ namespace ScreenShotLib
         }
 
         //Default settings ctrl + alt +  a
+        //Old Keymodifer is there in case of fallback
         public string F_path { get; set; } = Path.Combine(ScreenShot_Core.ProgramDirectory, "shortcut.ini");
         public enum KeyModifier
         {
@@ -83,6 +84,8 @@ namespace ScreenShotLib
         private static extern bool RegisterRawInputDevices(RawInputDevice[] pRawInputDevice, uint uiNumDevices, uint cbSize);
         [DllImport("user32.dll")]
         private static extern int GetRawInputData(IntPtr hRawInput, uint uiCommand, IntPtr pData, ref uint pcbSize, uint cbSizeHeader);
+        [DllImport("user32.dll")]
+        static extern short GetAsyncKeyState(int vKey);
 
         public string GetKeyString()
         {
@@ -130,7 +133,6 @@ namespace ScreenShotLib
         }
         private bool ProcessRawInput(IntPtr lParam)
         {
-            // RAWINPUT structure
             const int RID_INPUT = 0x10000003;
             uint dwSize = 0;
             GetRawInputData(lParam, RID_INPUT, IntPtr.Zero, ref dwSize, (uint)Marshal.SizeOf(typeof(RAWINPUTHEADER)));
@@ -145,17 +147,21 @@ namespace ScreenShotLib
                 RAWINPUT raw = (RAWINPUT)Marshal.PtrToStructure(buffer, typeof(RAWINPUT));
                 if (raw.header.dwType == 1) // Keyboard
                 {
-                    // Only process key down events
                     if (raw.keyboard.Message == 0x0100 || raw.keyboard.Message == 0x0104) // WM_KEYDOWN or WM_SYSKEYDOWN
                     {
                         Keys key = (Keys)raw.keyboard.VKey;
-                        int modifiers = 0;
-                        if ((Control.ModifierKeys & Keys.LWin) == Keys.LWin) modifiers += 8;
-                        if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift) modifiers += 4;
-                        if ((Control.ModifierKeys & Keys.Control) == Keys.Control) modifiers += 2;
-                        if ((Control.ModifierKeys & Keys.Alt) == Keys.Alt) modifiers += 1;
 
-                        if (key.GetHashCode() == Vk && modifiers == FsModifier)
+                        int modifiers = 0;
+                        if ((GetAsyncKeyState((int)Keys.LWin) & 0x8000) != 0 || (GetAsyncKeyState((int)Keys.RWin) & 0x8000) != 0)
+                            modifiers += 8;
+                        if ((GetAsyncKeyState((int)Keys.ShiftKey) & 0x8000) != 0)
+                            modifiers += 4;
+                        if ((GetAsyncKeyState((int)Keys.ControlKey) & 0x8000) != 0)
+                            modifiers += 2;
+                        if ((GetAsyncKeyState((int)Keys.Menu) & 0x8000) != 0) // Alt key
+                            modifiers += 1;
+
+                        if ((int)key == Vk && modifiers == FsModifier)
                         {
                             return true;
                         }
@@ -166,6 +172,7 @@ namespace ScreenShotLib
             {
                 Marshal.FreeHGlobal(buffer);
             }
+
             return false;
         }
         protected override void WndProc(ref Message m)

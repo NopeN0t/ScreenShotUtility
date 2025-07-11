@@ -65,10 +65,8 @@
     <Compile Include="Forms\Main.Designer.cs">
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
-    <Compile Include="ScreenShotLib\ScreenShot_Core_Old.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScreenShotLib\ScreenShot_Events_Old.cs" />
     <Compile Include="Forms\Select_Process.cs">
       <SubType>Form</SubType>
     </Compile>
