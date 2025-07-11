@@ -1,4 +1,4 @@
-﻿using SSU.ScreenShotLib;
+﻿using ScreenShotLib;
 using System;
 using System.Data;
 using System.Diagnostics;
@@ -10,20 +10,20 @@ namespace SSU
 {
     public partial class Select_Process : Form
     {   //SC_Core passed from main form
-        public ScreenShot_Core_Old SC_Lib;
+        public ScreenShot_Engine SC_Lib;
         public Select_Process()
         {
             InitializeComponent();
         }
         public DataTable pr = new DataTable();
         public Process[] processes;
-        public void setup_pr()
+        public void Setup_pr()
         {
             pr.Columns.Clear();
             pr.Columns.Add("Process Name");
             pr.Columns.Add("Process ID");
         }
-        public void load_pr()
+        public void Load_pr()
         {
             pr.Rows.Clear();
             processes = Process.GetProcesses().Where(p => !string.IsNullOrEmpty(p.MainWindowTitle)).ToArray();
@@ -42,18 +42,18 @@ namespace SSU
         }
         private void Select_Process_Load(object sender, EventArgs e)
         {
-            setup_pr();
-            load_pr();
+            Setup_pr();
+            Load_pr();
             dataGridView1.DataSource = pr;
             RefreshGrid(dataGridView1);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void Button1_Click(object sender, EventArgs e)
         {
             this.Close();
         }
         int index = -1;
-        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             index = e.RowIndex;
         }
@@ -62,9 +62,9 @@ namespace SSU
         {
             try
             {
-                SC_Lib.Select_process = processes[index];
-                Global.handle = SC_Lib.Select_process.MainWindowHandle;
-                if (Global.handle == IntPtr.Zero)
+                SC_Lib.SC_Core.Select_process = processes[index].MainWindowHandle;
+                Global.Selected_Process = processes[index];
+                if (SC_Lib.SC_Core.Select_process == IntPtr.Zero)
                     MessageBox.Show("Window Not Found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.OK;
             }

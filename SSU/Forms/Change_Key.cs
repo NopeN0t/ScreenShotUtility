@@ -1,4 +1,4 @@
-﻿using SSU.ScreenShotLib;
+﻿using ScreenShotLib;
 using System;
 using System.Windows.Forms;
 
@@ -6,7 +6,7 @@ namespace SSU
 {
     public partial class Change_Key : Form
     {   //SC_Core passed from main form
-        public ScreenShot_Core SC_Lib;
+        public ScreenShot_Engine SC_Lib;
         private bool setmode = false;
         public Change_Key()
         {

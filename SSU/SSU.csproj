@@ -65,10 +65,10 @@
     <Compile Include="Forms\Main.Designer.cs">
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
-    <Compile Include="ScreenShotLib\ScreenShot_Core.cs" />
+    <Compile Include="ScreenShotLib\ScreenShot_Core_Old.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScreenShotLib\ScreenShot_Events.cs" />
+    <Compile Include="ScreenShotLib\ScreenShot_Events_Old.cs" />
     <Compile Include="Forms\Select_Process.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -109,6 +109,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="custom.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScreenShotLib\ScreenShotLib.csproj">
+      <Project>{64509838-e315-4a98-a5f4-9f4886f737cb}</Project>
+      <Name>ScreenShotLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

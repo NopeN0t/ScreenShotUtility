@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Drawing;
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -10,11 +11,22 @@ namespace ScreenShotLib
         public ScreenShot_Core SC_Core = new ScreenShot_Core();
         public ScreenShot_Engine()
         {
+            try
+            {
+                if (File.Exists(F_path))
+                    LoadSettings();
+                else
+                    SaveSettings();
+            }
+            catch
+            {
+                ScreenShot_Events.RaiseWarning(this, "Error Loading Settings");
+                SaveSettings();
+            }
+            SC_Core.SetIndex();
             this.Text = "Raw Input Listener";
             this.WindowState = FormWindowState.Minimized;
             this.ShowInTaskbar = false;
-            this.Load += (s, e) => RegisterRawInput();
-            this.FormClosing += (s, e) => UnregisterRawInput();
         }
 
         struct RawInputDevice
@@ -50,6 +62,7 @@ namespace ScreenShotLib
         }
 
         //Default settings ctrl + alt +  a
+        public string F_path { get; set; } = Path.Combine(ScreenShot_Core.ProgramDirectory, "shortcut.ini");
         public enum KeyModifier
         {
             None = 0,
@@ -58,24 +71,34 @@ namespace ScreenShotLib
             Shift = 4,
             WinKey = 8
         }
-        public IntPtr Select_process { get; set; } = IntPtr.Zero;
         public int FsModifier { get; set; } = 3;
         public int Vk { get; set; } = Keys.A.GetHashCode();
-        public int mode { get; set; } = 0; //0 = Capture entire screen, 1 = Capture selected window, 2 = Capture selected area
-        public int limit { get; set; } = 100; //Limit for screenshots, default is 100
+        public int Mode { get; set; } = 0; //0 = Capture entire screen, 1 = Capture selected window, 2 = Capture selected area
+        public int Limit { get; set; } = 100; //Limit for screenshots, default is 100
+        public bool Sfx { get; set; } = true; //Enable sound effect on screenshot
         public string Vk_str { get; set; } = "A";
 
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetClientRect(IntPtr hWnd, out Rectangle lpRect);
-        [DllImport("user32.dll")]
-        private static extern bool ClientToScreen(IntPtr hWnd, ref Point lpPoint);
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool RegisterRawInputDevices(RawInputDevice[] pRawInputDevice, uint uiNumDevices, uint cbSize);
         [DllImport("user32.dll")]
         private static extern int GetRawInputData(IntPtr hRawInput, uint uiCommand, IntPtr pData, ref uint pcbSize, uint cbSizeHeader);
 
-
+        public string GetKeyString()
+        {
+            int n = FsModifier;
+            var modifiers = new[] { ("Win", 8), ("Shift", 4), ("Ctrl", 2), ("Alt", 1) };
+            string s = "";
+            foreach (var modifier in modifiers)
+            {
+                if (n >= modifier.Item2)
+                {
+                    s += modifier.Item1 + "+";
+                    n -= modifier.Item2;
+                }
+            }
+            return s += Vk_str;
+        }
         public void RegisterRawInput()
         {
             RawInputDevice[] rid = new RawInputDevice[1];
@@ -158,30 +181,20 @@ namespace ScreenShotLib
                     /// mode 2 = Capture selected area
                     /// </summary>
                     //Check if limit reached
-                    if (SC_Core.Index == limit)
+                    if (SC_Core.Index == Limit)
                     { ScreenShot_Events.RaiseWarning(this, "Limit Reached"); return; }
-                    if (mode == 0)
+                    if (Mode == 0)
                     {
-                        Rectangle bounds = Screen.GetBounds(Point.Empty);
-                        using (Bitmap bm = new Bitmap(bounds.Width, bounds.Height))
-                            SC_Core.TakeScreenShot(bm, Point.Empty, Point.Empty, bounds.Size);
+                        if(!SC_Core.CaptureFullScreen(Sfx))
+                            return;
                     }
-                    else if (mode == 1)
+                    else if (Mode == 1)
                     {
-                        try
-                        {
-                            GetClientRect(Select_process, out Rectangle rect);
-                            Point topleft = new Point(rect.Left, rect.Top);
-                            ClientToScreen(Select_process, ref topleft);
-                            using (Bitmap bm = new Bitmap(rect.Width - rect.X, rect.Height - rect.Y))
-                                SC_Core.TakeScreenShot(bm, topleft, Point.Empty, rect.Size);
-                        }
-                        catch { ScreenShot_Events.RaiseWarning(this, "Invalid selection"); return; }
+                        if (!SC_Core.CaptureApplication(Sfx))
+                            return;
                     }
-                    else if (mode == 2)
-                    {
-                        //Todo
-                    }
+                    else if (Mode == 2)
+                    { }
                     else
                         throw new Exception("Invalid mode");
                     SC_Core.Index++;
@@ -189,6 +202,42 @@ namespace ScreenShotLib
                 }
             }
             base.WndProc(ref m);
+        }
+        public void SaveSettings()
+        {
+            StreamWriter sw = new StreamWriter(F_path, false);
+            sw.WriteLine("[infos]");
+            sw.WriteLine($"fsModifier = {FsModifier}");
+            sw.WriteLine($"vk = {Vk}");
+            sw.WriteLine($"vk_str = {Vk_str}");
+            sw.WriteLine($"res_path = {SC_Core.Save_Path}");
+            sw.WriteLine($"res_prefix = {SC_Core.Save_Prefix}");
+            sw.WriteLine($"sfx = {Sfx}");
+            sw.WriteLine($"format = {SC_Core.Format}");
+            sw.WriteLine($"file_name = {SC_Core.Save_Suffix}");
+            sw.Close();
+        }
+        public void LoadSettings()
+        {
+            var dict = new Dictionary<string, string>();
+            StreamReader sr = new StreamReader(F_path);
+            while (!sr.EndOfStream)
+            {
+                string s = sr.ReadLine();
+                if (string.IsNullOrEmpty(s) || s.StartsWith("["))
+                    continue;
+                string[] s2 = s.Split('=');
+                dict[s2[0].Trim()] = s2[1].Trim();
+            }
+            sr.Close();
+            FsModifier = Convert.ToInt32(dict["fsModifier"]);
+            Vk = Convert.ToInt32(dict["vk"]);
+            Vk_str = dict["vk_str"];
+            SC_Core.Save_Path = dict["res_path"];
+            Sfx = Convert.ToBoolean(dict["sfx"]);
+            SC_Core.Format = dict["format"];
+            SC_Core.Save_Suffix = dict["file_name"];
+            SC_Core.Save_Prefix = dict["res_prefix"];
         }
     }
 }

@@ -51,7 +51,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.SC_cap = new System.Windows.Forms.ComboBox();
             this.SC_prefix = new System.Windows.Forms.TextBox();
-            this.SC_name = new System.Windows.Forms.TextBox();
+            this.SC_suffix = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.Icon_Menu = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -187,7 +187,7 @@
             this.process_select.TabIndex = 12;
             this.process_select.Text = "Select";
             this.process_select.UseVisualStyleBackColor = true;
-            this.process_select.Click += new System.EventHandler(this.process_select_Click);
+            this.process_select.Click += new System.EventHandler(this.Process_select_Click);
             // 
             // Process_box
             // 
@@ -220,7 +220,7 @@
             this.process_mode.TabIndex = 9;
             this.process_mode.Text = "Specfic Program";
             this.process_mode.UseVisualStyleBackColor = true;
-            this.process_mode.CheckedChanged += new System.EventHandler(this.process_mode_CheckedChanged);
+            this.process_mode.CheckedChanged += new System.EventHandler(this.Process_mode_CheckedChanged);
             // 
             // SC_Sample
             // 
@@ -247,7 +247,7 @@
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.SC_cap);
             this.groupBox2.Controls.Add(this.SC_prefix);
-            this.groupBox2.Controls.Add(this.SC_name);
+            this.groupBox2.Controls.Add(this.SC_suffix);
             this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Location = new System.Drawing.Point(15, 149);
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -314,12 +314,12 @@
             // 
             // SC_name
             // 
-            this.SC_name.Location = new System.Drawing.Point(272, 28);
-            this.SC_name.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.SC_name.Name = "SC_name";
-            this.SC_name.Size = new System.Drawing.Size(124, 34);
-            this.SC_name.TabIndex = 6;
-            this.SC_name.TextChanged += new System.EventHandler(this.SC_name_TextChanged);
+            this.SC_suffix.Location = new System.Drawing.Point(272, 28);
+            this.SC_suffix.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.SC_suffix.Name = "SC_name";
+            this.SC_suffix.Size = new System.Drawing.Size(124, 34);
+            this.SC_suffix.TabIndex = 6;
+            this.SC_suffix.TextChanged += new System.EventHandler(this.SC_name_TextChanged);
             // 
             // label6
             // 
@@ -335,7 +335,7 @@
             // 
             this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
             this.notifyIcon.Text = "SSU";
-            this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyicon_doubleclick);
+            this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Notifyicon_doubleclick);
             // 
             // Icon_Menu
             // 
@@ -417,7 +417,7 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ComboBox SC_cap;
-        private System.Windows.Forms.TextBox SC_name;
+        private System.Windows.Forms.TextBox SC_suffix;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label Index;
         private System.Windows.Forms.CheckBox process_mode;

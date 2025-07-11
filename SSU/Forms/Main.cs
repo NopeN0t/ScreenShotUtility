@@ -1,5 +1,5 @@
 ﻿using Microsoft.Win32;
-using SSU.ScreenShotLib;
+using ScreenShotLib;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -9,72 +9,50 @@ namespace SSU
 {
     public partial class Main : Form
     {
-        //Shortcut Detection
-        protected override void WndProc(ref Message m)
-        {
-            //0x0312 = 786 (RegisterHotKey Method)
-            if (m.Msg == 0x00FF) //RawInput Method
-            {
-                int mode;
-                if (!process_mode.Checked)
-                    mode = 0; //0 capture entire screen
-                else
-                    mode = 1; //1 capture selected window
-                //to add 2 capture selected area
-                if (SC_Lib.ProcessRawInput(m.LParam))
-                    SC_Lib.HandleWndProc(Convert.ToInt32(SC_cap.Text), mode);
-            }
-            base.WndProc(ref m);
-        }
         //Actual Code Start's here
-        ScreenShot_Core_Old SC_Lib;
-        bool isInitilized = false;
+        readonly ScreenShot_Engine SC_Engine;
+        readonly bool isInitilized = false;
 
         public Main()
         {
             InitializeComponent();
 
             //Initialize Hotkey
-            SC_Lib = new ScreenShot_Core_Old(this.Handle);
-            try
-            {
-                SC_Lib.RegisterRawInput();
-            }
-            catch { MessageBox.Show("Failed To Register ShortCut", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-
-            ScreenShot_Events_Old.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
-            ScreenShot_Events_Old.Warning += (sender, e) => MessageBox.Show(e, "Warning");
+            SC_Engine = new ScreenShot_Engine();
+            SC_Engine.RegisterRawInput();
+            ScreenShot_Events.ScreenshotShortcutTriggered += (sender, e) => Update_preview();
+            ScreenShot_Events.Warning += (sender, e) => MessageBox.Show(e, "Warning");
 
             //Initialize UI
             Update_preview();
             notifyIcon.ContextMenuStrip = Icon_Menu;
-            Key_box.Text = SC_Lib.GetKeyString();
+            Key_box.Text = SC_Engine.GetKeyString();
             string s = "1";
-            for (int i = 0; i < SC_Lib.Format.Length; i++)
+            for (int i = 0; i < SC_Engine.SC_Core.Format.Length; i++)
                 s += "0";
             SC_cap.Text = s;
-            Browse_box.Text = SC_Lib.Res_path;
-            Play_Sound.Checked = SC_Lib.Sfx;
+            Browse_box.Text = SC_Engine.SC_Core.Save_Path;
+            Play_Sound.Checked = SC_Engine.Sfx;
             //Auto start
             try
             {
                 RegistryKey rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-                Startup.Checked = rk?.GetValue(Global.program_name) != null;
+                Startup.Checked = rk?.GetValue(Global.Program_name) != null;
                 //Check if auto start is valid (program location, version check)
                 if (Startup.Checked)
                 {
                     //Path check
-                    if (rk.GetValue(Global.program_name).ToString() != Application.ExecutablePath)
+                    if (rk.GetValue(Global.Program_name).ToString() != Application.ExecutablePath)
                     {
-                        rk.DeleteValue(Global.program_name, false);
-                        rk.SetValue(Global.program_name, Application.ExecutablePath);
+                        rk.DeleteValue(Global.Program_name, false);
+                        rk.SetValue(Global.Program_name, Application.ExecutablePath);
                     }
                     //Version check
-                    FileVersionInfo version = FileVersionInfo.GetVersionInfo(rk.GetValue(Global.program_name).ToString());
+                    FileVersionInfo version = FileVersionInfo.GetVersionInfo(rk.GetValue(Global.Program_name).ToString());
                     if (Global.program_version.FileVersion.CompareTo(version.FileVersion) > 0)
                     {
-                        rk.DeleteValue(Global.program_name, false);
-                        rk.SetValue(Global.program_name, Application.ExecutablePath);
+                        rk.DeleteValue(Global.Program_name, false);
+                        rk.SetValue(Global.Program_name, Application.ExecutablePath);
                     }
                 }
             }
@@ -83,18 +61,23 @@ namespace SSU
             //Minimize to tray
             Start_minimized.Checked = Properties.Settings.Default.Start_Minimized;
             if (Properties.Settings.Default.Start_Minimized)
+            {
                 this.WindowState = FormWindowState.Minimized;
-            From_resize(this, null); //Trigger minimize event
+                this.ShowInTaskbar = false;
+                this.Hide();
+                notifyIcon.Visible = true;
+            }
             isInitilized = true;
         }
 
         //Update UI
         void Update_preview()
         {
-            SC_Sample.Text = Path.GetFileName(SC_Lib.GetSCPath());
-            SC_name.Text = SC_Lib.Res_name;
-            Index.Text = $"Image Saved\n{SC_Lib.Index}";
-            Icon_Cap.Text = $"{SC_Lib.Index}/{SC_cap.Text} Images";
+            SC_Sample.Text = Path.GetFileName(SC_Engine.SC_Core.GetSCPath());
+            SC_suffix.Text = SC_Engine.SC_Core.Save_Suffix;
+            SC_prefix.Text = SC_Engine.SC_Core.Save_Prefix;
+            Index.Text = $"Image Saved\n{SC_Engine.SC_Core.Index}";
+            Icon_Cap.Text = $"{SC_Engine.SC_Core.Index}/{SC_cap.Text} Images";
         }
 
         //Unload Hotkey and Save settings
@@ -102,24 +85,23 @@ namespace SSU
         {
             try
             {
-                SC_Lib.UnregisterRawInput();
+                SC_Engine.UnregisterRawInput();
             }
             catch { }
-            SC_Lib.save();
+            SC_Engine.SaveSettings();
         }
 
         private void Key_set_Click(object sender, EventArgs e)
         {
-            Change_Key ck = new Change_Key();
-            ck.SC_Lib = SC_Lib;
+            Change_Key ck = new Change_Key { SC_Lib = SC_Engine };
             if (ck.ShowDialog() == DialogResult.OK)
             {
-                Key_box.Text = SC_Lib.GetKeyString();
-                SC_Lib.save();
+                Key_box.Text = SC_Engine.GetKeyString();
+                SC_Engine.SaveSettings();
                 try
                 {
-                    SC_Lib.UnregisterRawInput();
-                    SC_Lib.RegisterRawInput();
+                    SC_Engine.UnregisterRawInput();
+                    SC_Engine.RegisterRawInput();
                 }
                 catch { MessageBox.Show("Failed To Change Shortcut", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
@@ -132,60 +114,63 @@ namespace SSU
             fbd.ShowDialog();
             if (fbd.SelectedPath != "")
             {
-                SC_Lib.Res_path = fbd.SelectedPath;
-                Browse_box.Text = SC_Lib.Res_path;
+                SC_Engine.SC_Core.Save_Path = fbd.SelectedPath;
+                Browse_box.Text = SC_Engine.SC_Core.Save_Path;
             }
-            SC_Lib.SetIndex();
+            SC_Engine.SC_Core.SetIndex();
             Update_preview();
         }
 
         //Update save path
         private void Browse_box_TextChanged(object sender, EventArgs e)
         {
-            SC_Lib.Res_path = Browse_box.Text;
-            SC_Lib.SetIndex();
+            SC_Engine.SC_Core.Save_Path = Browse_box.Text;
+            SC_Engine.SC_Core.SetIndex();
             Update_preview();
         }
 
         private void Play_Sound_CheckedChanged(object sender, EventArgs e)
         {
-            SC_Lib.Sfx = Play_Sound.Checked;
+            SC_Engine.Sfx = Play_Sound.Checked;
         }
 
         //Update save name
         private void SC_name_TextChanged(object sender, EventArgs e)
         {
-            SC_Lib.Res_name = SC_name.Text;
-            SC_Lib.SetIndex();
+            SC_Engine.SC_Core.Save_Suffix = SC_suffix.Text;
+            SC_Engine.SC_Core.SetIndex();
             Update_preview();
         }
 
         private void SC_cap_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SC_Lib.SetFormat(SC_cap.SelectedItem.ToString().Length);
-            SC_Lib.SetIndex();
+            SC_Engine.SC_Core.SetFormat(SC_cap.SelectedItem.ToString().Length);
+            SC_Engine.SC_Core.SetIndex();
             Update_preview();
         }
 
-        private void process_mode_CheckedChanged(object sender, EventArgs e)
+        private void Process_mode_CheckedChanged(object sender, EventArgs e)
         {
             Process_box.Enabled = process_mode.Checked;
             process_select.Enabled = process_mode.Checked;
             Process_label.Enabled = process_mode.Checked;
+            if (process_mode.Checked)
+                SC_Engine.Mode = 1; // Process Mode
+            else
+                SC_Engine.Mode = 0; // Normal Mode
         }
 
-        private void process_select_Click(object sender, EventArgs e)
+        private void Process_select_Click(object sender, EventArgs e)
         {
-            Select_Process sp = new Select_Process();
-            sp.SC_Lib = SC_Lib;
+            Select_Process sp = new Select_Process { SC_Lib = SC_Engine };
             if (sp.ShowDialog() == DialogResult.OK)
-                Process_box.Text = SC_Lib.Select_process.ProcessName;
+                Process_box.Text = Global.Selected_Process.ProcessName;
         }
 
         private void SC_prefix_TextChanged(object sender, EventArgs e)
         {
-            SC_Lib.Res_prefix = SC_prefix.Text;
-            SC_Lib.SetIndex();
+            SC_Engine.SC_Core.Save_Prefix = SC_prefix.Text;
+            SC_Engine.SC_Core.SetIndex();
             Update_preview();
         }
 
@@ -200,7 +185,7 @@ namespace SSU
         }
 
         //Show from tray
-        private void notifyicon_doubleclick(object sender, MouseEventArgs e)
+        private void Notifyicon_doubleclick(object sender, MouseEventArgs e)
         {
             this.Show();
             this.WindowState = FormWindowState.Normal;
@@ -213,9 +198,9 @@ namespace SSU
             {
                 RegistryKey rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
                 if (Startup.Checked)
-                    rk.SetValue(Global.program_name, Application.ExecutablePath);
+                    rk.SetValue(Global.Program_name, Application.ExecutablePath);
                 else
-                    rk.DeleteValue(Global.program_name, false);
+                    rk.DeleteValue(Global.Program_name, false);
             }
         }
 
