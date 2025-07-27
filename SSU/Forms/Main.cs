@@ -3,6 +3,8 @@ using ScreenShotLib;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SSU
@@ -61,13 +63,15 @@ namespace SSU
             { MessageBox.Show("Error loading startup settings\n" + e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             //Minimize to tray
             Start_minimized.Checked = Properties.Settings.Default.Start_Minimized;
-            if (Properties.Settings.Default.Start_Minimized)
-            {
-                this.WindowState = FormWindowState.Minimized;
-                this.ShowInTaskbar = false;
-                this.Hide();
-                notifyIcon.Visible = true;
-            }
+            Task.Run(() => {
+                Task.Delay(1).Wait(); //Allow UI to fully load before minimizing
+                if (Properties.Settings.Default.Start_Minimized)
+                {
+                    this.Invoke((Action)(() => {
+                        this.WindowState = FormWindowState.Minimized;
+                    }));
+                }
+            });
             isInitilized = true;
         }
 
