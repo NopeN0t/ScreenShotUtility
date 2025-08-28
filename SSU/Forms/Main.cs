@@ -78,6 +78,7 @@ namespace SSU
         //Update UI
         void Update_preview()
         {
+            SC_Engine.SC_Core.SetIndex(); //Force refresh index
             SC_Sample.Text = Path.GetFileName(SC_Engine.SC_Core.GetSCPath());
             SC_suffix.Text = SC_Engine.SC_Core.Save_Suffix;
             SC_prefix.Text = SC_Engine.SC_Core.Save_Prefix;
