@@ -205,7 +205,6 @@ namespace ScreenShotLib
                     else
                         throw new Exception("Invalid mode");
                     SC_Core.Index++;
-                    ScreenShot_Events.RaiseShortcutTrigger(this);
                 }
             }
             base.WndProc(ref m);

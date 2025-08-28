@@ -28,13 +28,14 @@ namespace ScreenShotLib
 
         private void TakeScreenShot(Bitmap bm, Point start, Point end, Size size, bool sfx = false)
         {
+            ScreenShot_Events.RaiseShortcutTrigger(this);
+
             using (Graphics g = Graphics.FromImage(bm))
             {
                 g.CopyFromScreen(start, end, size);
                 bm.Save(GetSCPath(), ImageFormat.Png);
             }
-            ScreenShot_Events.RaiseShortcutTrigger(this);
-
+            
             //Notify User (if enable)
             if (sfx)
             {
